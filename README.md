@@ -77,4 +77,9 @@ mi-lista-inteligente/
 ---
 
 ## Créditos
-Proyecto desarrollado por **Luis Yasmani Fajardo Durán** como parte de la **Licenciatura en Desarrollo de Sistemas Web** (UDGVirtual).  
+
+Proyecto desarrollado en el marco de la materia Proyecto VII (UDGVirtual) por el equipo:
+- **Luis Enrique – Product Owner**
+- **Alicia – Scrum Master / QA**
+- **Luis Yasmani Fajardo Durán – Backend / DevOps**
+- **Eduardo Alejandro – Frontend**
