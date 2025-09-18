@@ -12,7 +12,7 @@ MVP inicial con:
 ## Cómo correr
 ```bash
 cd frontend
-cp .env.example .env.local  # añade tus claves de Supabase
+cp .env.example .env.local
 npm install
 npm run dev
 ```
