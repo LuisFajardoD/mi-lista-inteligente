@@ -1,0 +1,22 @@
+:root {
+  font-family: system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.4;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: #0b1020; color: #f6f8ff; }
+a { color: #a8c7ff; text-decoration: none; }
+a.active { text-decoration: underline; }
+.container { max-width: 1000px; margin: 0 auto; padding: 16px; }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+nav { display: flex; gap: 12px; }
+.content { margin-top: 16px; background:#111836; border:1px solid #223; border-radius:12px; padding:16px; }
+.card { background:#0f1530; border:1px solid #223; border-radius:12px; padding:16px; margin-bottom: 16px; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; }
+input, button, select, textarea {
+  background: #0b1020; color: #fff; border:1px solid #2a3358; border-radius: 10px; padding: 10px 12px;
+}
+button { cursor: pointer; }
+table { width: 100%; border-collapse: collapse; }
+th, td { border-bottom: 1px solid #223; padding: 8px; text-align: left; }
+.muted { opacity: .8; }
+.footer { margin-top: 16px; opacity:.7; }
