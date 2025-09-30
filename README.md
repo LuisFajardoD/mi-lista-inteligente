@@ -13,6 +13,7 @@ La propuesta combina un enfoque académico con una visión práctica de aplicaci
 - Implementar un sistema de autenticación seguro para usuarios.  
 - Permitir la carga y unificación de listas de artículos en formato digital.  
 - Incorporar un comparador de precios con proveedores externos.  
+- Implementar alertas de precios e historial de productos.  
 - Documentar el avance del proyecto por sprints, de acuerdo con la planeación establecida.  
 
 ---
@@ -57,29 +58,46 @@ El sistema ahora permite a los usuarios visualizar y comparar precios entre dife
 
 ---
 
+### 🟢 Sprint 3 (Finalizado)
+**Periodo:** 6–19 octubre 2025  
+
+**Alcance logrado:**
+- Finalización del **cálculo de costo total con envíos**, pendiente del Sprint 2.  
+- Implementación de **alertas automáticas**:  
+  - **PRICE_DROP**: notificación cuando el precio baja ≥5%.  
+  - **BACK_IN_STOCK**: notificación cuando un producto vuelve a estar disponible.  
+- Creación de la tabla **`price_history`** en Supabase para almacenar registros de precios.  
+- Implementación de lógica en backend para guardar históricos al momento de comparar.  
+- Desarrollo de la vista **/history** en frontend para consultar registros anteriores.  
+
+**Resultado:**  
+El sistema ahora cuenta con un comparador completo, capaz de alertar al usuario sobre cambios relevantes y de mantener un historial de precios consultable en la interfaz.  
+
+---
+
 ## Estructura del repositorio
 mi-lista-inteligente/
 ├─ frontend/ # Aplicación web (Vite + React + Supabase)
 ├─ docs/
 │ ├─ actividad-2.2/ # Entregables Sprint 1 (planeación y actividades)
-│ └─ actividad-2.3/ # Entregables Sprint 2
+│ ├─ actividad-2.3/ # Entregables Sprint 2
+│ └─ actividad-3.1/ # Entregables Sprint 3
 └─ README.md
+
 
 ---
 
 ## Próximos pasos
-- **Sprint 3:** integración de alertas de precio e histórico de productos por proveedor.  
-- **Sprint 4:** generación de reportes PDF con detalle de listas, comparaciones y ahorros obtenidos.  
-- **Sprint 5:** optimización de rendimiento, validación con usuarios y pruebas de usabilidad.  
-- **Sprint 6:** despliegue final del sistema en un entorno de producción y presentación de resultados académicos.  
-
+- **Sprint 4:** gestión avanzada de alertas (umbrales configurables, suscripciones de usuario) y vista dedicada de notificaciones.  
+- **Sprint 5:** analítica de precios (gráficas de tendencias, carrito sugerido, exportación de reportes).  
+- **Sprint 6:** refuerzo de seguridad con RLS en Supabase, despliegue final en un entorno de producción y documentación académica final.  
 
 ---
 
 ## Créditos
 
-Proyecto desarrollado en el marco de la materia Proyecto VII (UDGVirtual) por el equipo:
-- **Luis Enrique – Product Owner**
-- **Alicia – Scrum Master / QA**
-- **Luis Yasmani Fajardo Durán – Backend / DevOps**
-- **Eduardo Alejandro – Frontend**
+Proyecto desarrollado en el marco de la materia Proyecto VII (UDGVirtual) por el equipo:  
+- **Luis Enrique – Product Owner**  
+- **Alicia – Scrum Master / QA**  
+- **Luis Yasmani – Backend / DevOps**  
+- **Eduardo Alejandro – Frontend**  

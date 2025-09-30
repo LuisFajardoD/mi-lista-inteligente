@@ -13,7 +13,8 @@ export default function App() {
           <Link to="/auth" className={is('/auth')}>Autenticación</Link>
           <Link to="/upload" className={is('/upload')}>Subir lista</Link>
           <Link to="/unified" className={is('/unified')}>Lista unificada</Link>
-          <Link to="/compare" className={is('/compare')}>Comparador</Link> {/* ⬅️ NUEVO */}
+          <Link to="/compare" className={is('/compare')}>Comparador</Link>
+          <Link to="/history" className={is('/history')}>Historial</Link>
         </nav>
       </header>
       <main className="content">
