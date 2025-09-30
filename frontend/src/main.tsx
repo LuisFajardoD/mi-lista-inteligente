@@ -5,7 +5,8 @@ import App from './App'
 import Auth from './pages/Auth'
 import UploadList from './pages/UploadList'
 import UnifiedList from './pages/UnifiedList'
-import Compare from './pages/Compare'   // ⬅️ IMPORTANTE: agregar comparador
+import Compare from './pages/Compare'
+import History from './pages/History'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -17,7 +18,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path="auth" element={<Auth />} />
           <Route path="upload" element={<UploadList />} />
           <Route path="unified" element={<UnifiedList />} />
-          <Route path="compare" element={<Compare />} /> {/* ⬅️ NUEVA RUTA */}
+          <Route path="compare" element={<Compare />} />
+          <Route path="history" element={<History />} />
         </Route>
       </Routes>
     </BrowserRouter>
