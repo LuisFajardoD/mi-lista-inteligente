@@ -1,7 +1,8 @@
+// frontend/src/lib/history.ts
 import { supabase } from './supabaseClient'
 import type { Offer } from './providers'
 
-// Guarda el historial de precios y envíos de los productos elegidos
+/** Guarda el historial de precios (elección del usuario). */
 export async function saveHistory(
   userId: string,
   rows: { product: string; quantity: number; chosen: Offer }[]
@@ -18,7 +19,7 @@ export async function saveHistory(
   if (error) throw error
 }
 
-// Obtiene el último total registrado para un producto/proveedor
+/** Último total (precio+envío) registrado para comparar caídas de precio. */
 export async function lastTotalFor(userId: string, product: string, provider: string) {
   const { data, error } = await supabase
     .from('price_history')
@@ -33,7 +34,7 @@ export async function lastTotalFor(userId: string, product: string, provider: st
   return data?.total_unit as number | undefined
 }
 
-// Crea una alerta de baja de precio o reabastecimiento
+/** Inserta una alerta (baja de precio o reabastecimiento). */
 export async function createAlert(
   userId: string,
   product: string,
@@ -53,7 +54,7 @@ export async function createAlert(
   if (error) throw error
 }
 
-// Recupera las alertas del usuario más recientes
+/** Lista de alertas recientes. */
 export async function fetchAlerts(userId: string) {
   const { data, error } = await supabase
     .from('alerts')
@@ -65,7 +66,7 @@ export async function fetchAlerts(userId: string) {
   return data ?? []
 }
 
-// Recupera el historial de precios de un usuario, con filtro opcional por producto
+/** Historial de precios (opcionalmente filtrado por producto). */
 export async function fetchHistory(userId: string, product?: string) {
   let q = supabase
     .from('price_history')
@@ -77,4 +78,20 @@ export async function fetchHistory(userId: string, product?: string) {
   const { data, error } = await q
   if (error) throw error
   return data ?? []
+}
+
+/** ✅ Registro de clics de afiliado (Sprint 4). */
+export async function logAffiliateClick(
+  userId: string,
+  product: string,
+  provider: string,
+  affiliateUrl: string
+) {
+  const { error } = await supabase.from('affiliate_clicks').insert({
+    user_id: userId,
+    product,
+    provider,
+    affiliate_url: affiliateUrl,
+  })
+  if (error) throw error
 }
