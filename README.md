@@ -75,29 +75,42 @@ El sistema ahora cuenta con un comparador completo, capaz de alertar al usuario 
 
 ---
 
+### 🟢 Sprint 4 (Finalizado)
+**Periodo:** 20 octubre – 2 noviembre 2025  
+
+**Alcance logrado:**
+- Integración de **enlaces de afiliado por proveedor** con **tracking por usuario**.  
+- Botón **“Comprar”** que redirige al proveedor usando el enlace de afiliado.  
+- **Exportación a PDF** del comparativo (jsPDF + Autotable) con **título**, **fecha**, **tabla** (producto/proveedor/precio/envío/total (unidad)/cantidad/total (línea)/disponibilidad) y **total del carrito**.  
+- Pruebas integrales para validar el funcionamiento conjunto de **alertas**, **historial** y **afiliados**.  
+
+**Resultado:**  
+Se habilitó la monetización inicial mediante afiliados y se incorporó evidencia descargable (PDF) del comparativo, manteniendo el flujo principal desde **Subir lista → Unificar → Comparar → Comprar/Descargar**.  
+
+---
+
 ## Estructura del repositorio
 mi-lista-inteligente/
 ├─ frontend/ # Aplicación web (Vite + React + Supabase)
 ├─ docs/
 │ ├─ actividad-2.2/ # Entregables Sprint 1 (planeación y actividades)
 │ ├─ actividad-2.3/ # Entregables Sprint 2
-│ └─ actividad-3.1/ # Entregables Sprint 3
+│ ├─ actividad-3.1/ # Entregables Sprint 3
+│ └─ actividad-3.2/ # Entregables Sprint 4
 └─ README.md
-
 
 ---
 
 ## Próximos pasos
-- **Sprint 4:** gestión avanzada de alertas (umbrales configurables, suscripciones de usuario) y vista dedicada de notificaciones.  
-- **Sprint 5:** analítica de precios (gráficas de tendencias, carrito sugerido, exportación de reportes).  
-- **Sprint 6:** refuerzo de seguridad con RLS en Supabase, despliegue final en un entorno de producción y documentación académica final.  
+- **Sprint 5:** métricas de afiliados (CTR por proveedor/producto), de-duplicación/rate limiting de clics y ajustes de PDF (branding/paginación).  
+- **Sprint 6:** refuerzo de seguridad con **RLS** en Supabase, despliegue final en un entorno de producción y **documentación académica** final.  
 
 ---
 
 ## Créditos
-
 Proyecto desarrollado en el marco de la materia Proyecto VII (UDGVirtual) por el equipo:  
 - **Luis Enrique – Product Owner**  
 - **Alicia – Scrum Master / QA**  
 - **Luis Yasmani – Backend / DevOps**  
 - **Eduardo Alejandro – Frontend**  
+
