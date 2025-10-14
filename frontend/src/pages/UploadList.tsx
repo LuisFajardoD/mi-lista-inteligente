@@ -6,7 +6,7 @@ import {
   saveHistory,
   lastTotalFor,
   createAlert,
-  logAffiliateClick,  // <-- tracking afiliados
+  logAffiliateClick,  // tracking afiliados
 } from '../lib/history'
 import {
   upsertWorkingList,
@@ -14,6 +14,7 @@ import {
   clearWorkingList,
 } from '../lib/workingLists'
 import { downloadComparePdf, type PdfRow } from '../lib/pdf'
+import { usePlan } from '../lib/plan'
 
 type RawRow = Record<string, any>
 
@@ -42,6 +43,11 @@ export default function UploadList() {
   const [compareRows, setCompareRows] = useState<CompareRow[]>([])
   const [alerts, setAlerts] = useState<{ product: string; provider: string; message: string }[]>([])
   const [grandTotal, setGrandTotal] = useState(0)
+
+  // Errores y plan
+  const [csvError, setCsvError] = useState<string | null>(null)
+  const { plan } = usePlan()
+  const planLimit = plan === 'premium' ? 50 : plan === 'b2b' ? 200 : 5
 
   // ===== Tracking de afiliados (Sprint 4) =====
   const [userId, setUserId] = useState<string | null>(null)
@@ -94,6 +100,18 @@ export default function UploadList() {
     const wb = XLSX.read(buf, { type: 'array' })
     const ws = wb.Sheets[wb.SheetNames[0]]
     const rows = XLSX.utils.sheet_to_json(ws) as RawRow[]
+
+    // Validación básica: debe tener columnas producto y cantidad
+    const cols = rows[0] ? Object.keys(rows[0]).map(c => c.toLowerCase()) : []
+    const hasProduct = cols.some(c => ['nombre','producto','product','name'].includes(c))
+    const hasQty = cols.some(c => ['cantidad','quantity','qty'].includes(c))
+    if (!rows.length || !hasProduct || !hasQty) {
+      setCsvError('El archivo debe incluir columnas de producto (nombre/producto) y cantidad.')
+      setRawRows([]); setUnified([]); setCompareRows([]); setAlerts([]); setGrandTotal(0)
+      return
+    }
+
+    setCsvError(null)
     setRawRows(rows)
     setCompareRows([])
     setAlerts([])
@@ -180,8 +198,8 @@ export default function UploadList() {
 
     const { data: { user } } = await supabase.auth.getUser()
 
-    // Si la lista es muy grande, usamos 12 primeros para demo fluida
-    const sample = unified.slice(0, 12).map(u => ({
+    // Límite por plan para la demo: Free=5, Premium=50, B2B=200
+    const sample = unified.slice(0, planLimit).map(u => ({
       product: normalizeKey(u.product),
       quantity: u.quantity || 1,
     }))
@@ -238,7 +256,7 @@ export default function UploadList() {
   const handleClearDraft = async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (user) await clearWorkingList(user.id)
-    setRawRows([]); setUnified([]); setCompareRows([]); setAlerts([]); setGrandTotal(0)
+    setRawRows([]); setUnified([]); setCompareRows([]); setAlerts([]); setGrandTotal(0); setCsvError(null)
   }
 
   // Columnas para tabla de preview (muestra TODO)
@@ -254,8 +272,13 @@ export default function UploadList() {
         <h2>1) Subir lista (CSV/XLSX)</h2>
         <input type="file" accept=".csv,.xlsx,.xls" onChange={(e) => handleFile(e.target.files?.[0] ?? null)} />
         <p className="muted" style={{ marginTop: 8 }}>
-          Columnas recomendadas: <strong>nombre</strong>, <strong>cantidad</strong>, <strong>sku</strong>, <strong>unidad</strong> (acepta equivalentes en español o inglés).
+          Columnas recomendadas: <strong>nombre</strong> y <strong>cantidad</strong> (acepta equivalentes en español o inglés).
         </p>
+        {csvError && (
+          <p className="muted" style={{ marginTop: 8, color: '#ffb4b4' }}>
+            {csvError}
+          </p>
+        )}
         {(rawRows.length || unified.length) > 0 && (
           <div className="actions" style={{ marginTop: 8 }}>
             <button className="btn" onClick={handleClearDraft}>Limpiar borrador</button>
@@ -325,6 +348,10 @@ export default function UploadList() {
                 {loading ? 'Procesando…' : 'Comparar precios'}
               </button>
             </div>
+
+            <p className="muted" style={{ marginTop: 8 }}>
+              Plan <strong style={{ textTransform: 'capitalize' }}>{plan}</strong>: se comparan hasta <strong>{planLimit}</strong> productos.
+            </p>
           </>
         )}
       </div>
