@@ -146,3 +146,123 @@ tbody tr:hover{ background: rgba(148,163,184,.05) }
   .form-grid{ grid-template-columns: 1fr }
   .auth-center{ place-items: center }
 }
+
+
+/* header más ordenado */
+.topbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.plan-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.plan-select {
+  padding: 6px 10px;
+  height: 32px;
+  min-width: 120px;
+}
+
+/* cards más “elevadas” */
+.card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+
+/* títulos */
+.card h2, .card h3 {
+  letter-spacing: .2px;
+  margin-bottom: 6px;
+}
+
+/* inputs y selects uniformes */
+.input, select.input {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #e6f4ef;
+  border-radius: 10px;
+}
+
+.input:focus {
+  outline: 0;
+  border-color: rgba(99, 255, 196, 0.6);
+  box-shadow: 0 0 0 3px rgba(99, 255, 196, 0.15);
+}
+
+/* botones */
+.btn {
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.12);
+}
+
+.btn.primary {
+  border-color: rgba(99, 255, 196, 0.4);
+}
+
+/* tablas */
+table {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+table thead th {
+  background: rgba(255,255,255,0.06);
+  font-weight: 600;
+}
+
+.badge.ok { background: rgba(46, 204, 113, .18); }
+.badge.no { background: rgba(231, 76, 60, .18); }
+
+
+/* Forzar tema oscuro en selects y su lista desplegable (Windows/Chrome) */
+:root { color-scheme: dark; }
+
+/* Estilo base del control */
+select,
+select.input,
+.input.plan-select {
+  background-color: #0d1524;
+  color: #e6f4ef;
+  border: 1px solid rgba(255,255,255,0.14);
+}
+
+/* Colores del menú desplegable (las opciones) */
+select.input option,
+.input.plan-select option {
+  background-color: #0b1220;   /* fondo de la lista */
+  color: #e8f7f0;              /* texto legible */
+}
+
+/* Opción resaltada / hover */
+select.input option:checked,
+.input.plan-select option:checked {
+  background-color: #17324a;   /* resaltado */
+  color: #caffea;
+}
+
+select.input option:hover,
+.input.plan-select option:hover {
+  background-color: #1e3b5a;
+  color: #ffffff;
+}
+
+/* Deshabilitadas (si las usas en otras vistas) */
+select.input:disabled,
+select.input option:disabled {
+  color: #8a96a8;
+}
+
+/* Focus lindo y accesible */
+select.input:focus,
+.input.plan-select:focus {
+  outline: 0;
+  box-shadow: 0 0 0 3px rgba(99,255,196,.22);
+  border-color: rgba(99,255,196,.5);
+}

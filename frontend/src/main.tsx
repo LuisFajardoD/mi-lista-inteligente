@@ -6,6 +6,9 @@ import App from './App'
 import AuthPage from './pages/Auth'
 import UploadList from './pages/UploadList'
 import HistoryPage from './pages/History'
+import Payments from './pages/Payments'
+import Teams from './pages/Teams'
+import ShareList from './pages/ShareList'
 
 import { AuthProvider, useAuth } from './lib/auth'
 import './index.css'
@@ -21,13 +24,13 @@ const router = createBrowserRouter([
     path: '/',
     element: <App />,
     children: [
-      // Inicio => /upload
-      { index: true, element: <Navigate to="/upload" replace /> },
+      // Inicio => /upload (redirección relativa)
+      { index: true, element: <Navigate to="upload" replace /> },
 
       // Autenticación
       { path: 'auth', element: <AuthPage /> },
 
-      // Subir lista (página principal protegida)
+      // Subir lista (protegida)
       {
         path: 'upload',
         element: (
@@ -37,7 +40,7 @@ const router = createBrowserRouter([
         ),
       },
 
-      // Historial
+      // Historial (protegida)
       {
         path: 'history',
         element: (
@@ -47,8 +50,34 @@ const router = createBrowserRouter([
         ),
       },
 
+      // Sprint 6: nuevas páginas (protegidas)
+      {
+        path: 'payments',
+        element: (
+          <RequireAuth>
+            <Payments />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: 'teams',
+        element: (
+          <RequireAuth>
+            <Teams />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: 'share',
+        element: (
+          <RequireAuth>
+            <ShareList />
+          </RequireAuth>
+        ),
+      },
+
       // Cualquier ruta desconocida → inicio
-      { path: '*', element: <Navigate to="/upload" replace /> },
+      { path: '*', element: <Navigate to="upload" replace /> },
     ],
   },
 ])

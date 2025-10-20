@@ -6,7 +6,7 @@ import {
   saveHistory,
   lastTotalFor,
   createAlert,
-  logAffiliateClick,  // tracking afiliados
+  logAffiliateClick, // tracking afiliados
 } from '../lib/history'
 import {
   upsertWorkingList,
@@ -41,7 +41,9 @@ export default function UploadList() {
   // Comparación
   const [loading, setLoading] = useState(false)
   const [compareRows, setCompareRows] = useState<CompareRow[]>([])
-  const [alerts, setAlerts] = useState<{ product: string; provider: string; message: string }[]>([])
+  const [alerts, setAlerts] = useState<
+    { product: string; provider: string; message: string }[]
+  >([])
   const [grandTotal, setGrandTotal] = useState(0)
 
   // Errores y plan
@@ -49,7 +51,7 @@ export default function UploadList() {
   const { plan } = usePlan()
   const planLimit = plan === 'premium' ? 50 : plan === 'b2b' ? 200 : 5
 
-  // ===== Tracking de afiliados (Sprint 4) =====
+  // ===== Tracking de afiliados =====
   const [userId, setUserId] = useState<string | null>(null)
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null))
@@ -57,9 +59,13 @@ export default function UploadList() {
 
   const trackClick = async (product: string, provider: string, url?: string) => {
     if (!userId || !url) return
-    try { await logAffiliateClick(userId, product, provider, url) } catch {}
+    try {
+      await logAffiliateClick(userId, product, provider, url)
+    } catch {
+      /* silencio */
+    }
   }
-  // ============================================
+  // =================================
 
   // ---------- Persistence: cargar borrador al entrar ----------
   useEffect(() => {
@@ -103,8 +109,8 @@ export default function UploadList() {
 
     // Validación básica: debe tener columnas producto y cantidad
     const cols = rows[0] ? Object.keys(rows[0]).map(c => c.toLowerCase()) : []
-    const hasProduct = cols.some(c => ['nombre','producto','product','name'].includes(c))
-    const hasQty = cols.some(c => ['cantidad','quantity','qty'].includes(c))
+    const hasProduct = cols.some(c => ['nombre', 'producto', 'product', 'name'].includes(c))
+    const hasQty = cols.some(c => ['cantidad', 'quantity', 'qty'].includes(c))
     if (!rows.length || !hasProduct || !hasQty) {
       setCsvError('El archivo debe incluir columnas de producto (nombre/producto) y cantidad.')
       setRawRows([]); setUnified([]); setCompareRows([]); setAlerts([]); setGrandTotal(0)
@@ -189,6 +195,54 @@ export default function UploadList() {
       })
     )
   }, [compareRows])
+
+  // ---------- Exportar CSV (Carrito Rápido: mejores ofertas) ----------
+  function downloadCartCsv(rows: {
+    product: string
+    provider: string
+    price: number
+    shipping: number
+    qty: number
+    affiliateUrl?: string
+  }[], filename = 'carrito_rapido.csv') {
+    const headers = [
+      'producto', 'proveedor', 'precio', 'envio',
+      'total_unidad', 'cantidad', 'total_linea', 'enlace_compra'
+    ]
+    const lines = rows.map(r => {
+      const unit = r.price + r.shipping
+      const line = unit * r.qty
+      const q = (v: any) => typeof v === 'string' ? `"${v.replace(/"/g, '""')}"` : String(v)
+      return [
+        q(r.product), q(r.provider),
+        (r.price).toFixed(2), (r.shipping).toFixed(2),
+        (unit).toFixed(2), r.qty,
+        (line).toFixed(2), q(r.affiliateUrl ?? '')
+      ].join(',')
+    })
+    const csv = [headers.join(','), ...lines].join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = filename; a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const handleDownloadCsv = () => {
+    if (!compareRows.length) return
+    const best = compareRows
+      .filter(r => r.selected)
+      .map(r => ({
+        product: r.product,
+        provider: r.selected!.provider,
+        price: r.selected!.price,
+        shipping: r.selected!.shipping,
+        qty: r.quantity,
+        affiliateUrl: r.selected!.affiliateUrl,
+      }))
+    if (best.length === 0) return
+    downloadCartCsv(best, 'carrito_rapido.csv')
+  }
 
   // ---------- Comparar precios aquí mismo ----------
   const handleCompareHere = async () => {
@@ -374,7 +428,14 @@ export default function UploadList() {
 
           <div
             className="card"
-            style={{ marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}
+            style={{
+              marginTop: 12,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 12,
+              flexWrap: 'wrap',
+            }}
           >
             <div>
               <h3>Resumen</h3>
@@ -392,6 +453,10 @@ export default function UploadList() {
                 }
               >
                 Descargar PDF
+              </button>
+
+              <button className="btn" style={{ marginLeft: 8 }} onClick={handleDownloadCsv}>
+                Descargar CSV (Carrito rápido)
               </button>
             </div>
           </div>
@@ -426,7 +491,10 @@ export default function UploadList() {
                       }}
                     >
                       <td style={{ textTransform: 'capitalize' }}>{r.product}</td>
-                      <td>{o.provider} {isBest && <span className="badge ok" style={{ marginLeft: 6 }}>Mejor opción</span>}</td>
+                      <td>
+                        {o.provider}{' '}
+                        {isBest && <span className="badge ok" style={{ marginLeft: 6 }}>Mejor opción</span>}
+                      </td>
                       <td>${o.price.toFixed(2)}</td>
                       <td>${o.shipping.toFixed(2)}</td>
                       <td>${unit.toFixed(2)}</td>

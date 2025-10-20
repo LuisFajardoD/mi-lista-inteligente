@@ -21,9 +21,33 @@ Este directorio contiene los entregables del proyecto académico **Mi Lista Inte
 
 ---
 
-## 📂 Actividad 3.1 — Sprint 2
+## 📂 Actividad 3.1 — Sprint 3
 - [Ejecución — Sprint 3](./actividad-3.1/Sprint3_Ejecucion.pdf)  
 - [Retrospectiva — Sprint 3](./actividad-3.1/Retrospectiva_Sprint3.pdf)  
 - [Informe de resultados y conclusiones](./actividad-3.1/Informe%20de%20resultados%20y%20conclusiones.pdf)  
 - [Sprint Planning — Sprint 3](./actividad-3.1/Sprint_Planning_Sprint3.pdf)  
   > **Nota:** El *Sprint Planning — Sprint 3* no fue solicitado explícitamente en la actividad 3.1, pero se incluye como respaldo para mantener la trazabilidad del proyecto.  
+
+---
+
+## 📂 Actividad 3.2 — Sprint 4
+- [Sprint Planning — Sprint 4](./actividad-3.2/Sprint_Planning_Sprint4.pdf)  
+- [Ejecución — Sprint 4](./actividad-3.2/Sprint4_Ejecucion.pdf)  
+- [Retrospectiva — Sprint 4](./actividad-3.2/Retrospectiva_Sprint4.pdf)  
+- [Informe de resultados y conclusiones](./actividad-3.2/Informe_de_resultados_y_conclusiones.pdf)  
+
+---
+
+## 📂 Actividad 3.3 — Sprint 5
+- [Sprint Planning — Sprint 5](./actividad-3.3/Sprint_Planning_Sprint5.pdf)  
+- [Ejecución — Sprint 5](./actividad-3.3/Sprint5_Ejecucion.pdf)  
+- [Retrospectiva — Sprint 5](./actividad-3.3/Retrospectiva_Sprint5.pdf)  
+- [Informe de resultados y conclusiones](./actividad-3.3/Informe_de_resultados_y_conclusiones.pdf)  
+
+---
+
+## 📂 Actividad 3.4 — Sprint 6
+- [Sprint Planning — Sprint 6](./actividad-3.4/Sprint_Planning_Sprint6.pdf)  
+- [Ejecución — Sprint 6](./actividad-3.4/Sprint6_Ejecucion.pdf)  
+- [Retrospectiva — Sprint 6](./actividad-3.4/Retrospectiva_Sprint6.pdf)  
+- [Informe de resultados y conclusiones](./actividad-3.4/Informe_de_resultados_y_conclusiones.pdf)

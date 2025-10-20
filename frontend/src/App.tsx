@@ -16,17 +16,19 @@ export default function App() {
   return (
     <>
       <header className="topbar">
-        <div className="wrap" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          {/* Título → link al inicio (subir lista) */}
-          <NavLink to="/upload" className="brand">
+        <div className="wrap topbar-inner">
+          {/* Marca → /upload si hay sesión, si no /auth */}
+          <NavLink to={user ? '/upload' : '/auth'} className="brand">
             Mi Lista Inteligente
           </NavLink>
 
-          {/* Menú: solo “Historial” y “Salir” si hay sesión */}
-          <nav className="menu" style={{ marginLeft: 'auto', display: 'flex', gap: 12 }}>
+          <nav className="menu">
             {user ? (
               <>
                 <NavLink to="/history">Historial</NavLink>
+                <NavLink to="/payments">Pagos</NavLink>
+                <NavLink to="/teams">Equipos</NavLink>
+                <NavLink to="/share">Compartir</NavLink>
                 <button className="linklike" onClick={handleSignOut}>Salir</button>
               </>
             ) : (
@@ -34,20 +36,21 @@ export default function App() {
             )}
           </nav>
 
-          {/* Selector de Plan */}
-          <div className="menu" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span className="muted" style={{ fontSize: 13 }}>Plan:</span>
-            <select
-              value={plan}
-              onChange={(e) => setPlan(e.target.value as 'free' | 'premium' | 'b2b')}
-              className="input"
-              style={{ padding: '6px 8px', height: 32 }}
-            >
-              <option value="free">Gratis</option>
-              <option value="premium">Premium</option>
-              <option value="b2b">B2B</option>
-            </select>
-          </div>
+          {/* Selector de plan: SOLO con sesión iniciada */}
+          {user && (
+            <div className="menu plan-picker">
+              <span className="muted">Plan:</span>
+              <select
+                value={plan}
+                onChange={(e) => setPlan(e.target.value as any)}
+                className="input plan-select"
+              >
+                <option value="free">Gratis</option>
+                <option value="premium">Premium</option>
+                <option value="b2b">B2B</option>
+              </select>
+            </div>
+          )}
         </div>
       </header>
 
