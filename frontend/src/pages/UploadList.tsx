@@ -1,18 +1,26 @@
 import { useEffect, useMemo, useState } from 'react'
 import * as XLSX from 'xlsx'
 import { supabase } from '../lib/supabaseClient'
-import { searchOffers, bestOffer, type Offer } from '../lib/providers'
+import { searchOffers, bestOffer, collapseByProvider, type Offer } from '../lib/providers'
+
 import {
   saveHistory,
   lastTotalFor,
   createAlert,
   logAffiliateClick, // tracking afiliados
 } from '../lib/history'
+// correcto (usa el camelCase del archivo que dejamos)
 import {
   upsertWorkingList,
   fetchLatestWorkingList,
   clearWorkingList,
+  listSaved,
+  openListIntoDraft,
+  renameList,
+  deleteList,
+  type WorkingList,
 } from '../lib/workingLists'
+
 import { downloadComparePdf, type PdfRow } from '../lib/pdf'
 import { usePlan } from '../lib/plan'
 
@@ -67,20 +75,24 @@ export default function UploadList() {
   }
   // =================================
 
-  // ---------- Persistence: cargar borrador al entrar ----------
+  // ---------- Cargar borrador al entrar ----------
   useEffect(() => {
     ;(async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      const draft = await fetchLatestWorkingList(user.id)
-      if (draft) {
-        setRawRows(draft.raw ?? [])
-        setUnified(draft.unified ?? [])
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+        const draft = await fetchLatestWorkingList(user.id)
+        if (draft) {
+          setRawRows(draft.raw ?? [])
+          setUnified(draft.unified ?? [])
+        }
+      } catch (e) {
+        console.warn('No se pudo cargar borrador:', e)
       }
     })()
   }, [])
 
-  // ---------- Persistence: guardar borrador cuando cambie ----------
+  // ---------- Guardar borrador cuando cambie ----------
   useEffect(() => {
     ;(async () => {
       const { data: { user } } = await supabase.auth.getUser()
@@ -99,86 +111,230 @@ export default function UploadList() {
     })()
   }, [rawRows, unified])
 
+
+
+
+
   // ---------- Subir lista ----------
-  const handleFile = async (file?: File | null) => {
-    if (!file) return
-    const buf = await file.arrayBuffer()
-    const wb = XLSX.read(buf, { type: 'array' })
-    const ws = wb.Sheets[wb.SheetNames[0]]
-    const rows = XLSX.utils.sheet_to_json(ws) as RawRow[]
+const handleFile = async (file?: File | null) => {
+  if (!file) return;
+  const buf = await file.arrayBuffer();
+  const wb = XLSX.read(buf, { type: "array" });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws) as RawRow[];
 
-    // Validación básica: debe tener columnas producto y cantidad
-    const cols = rows[0] ? Object.keys(rows[0]).map(c => c.toLowerCase()) : []
-    const hasProduct = cols.some(c => ['nombre', 'producto', 'product', 'name'].includes(c))
-    const hasQty = cols.some(c => ['cantidad', 'quantity', 'qty'].includes(c))
-    if (!rows.length || !hasProduct || !hasQty) {
-      setCsvError('El archivo debe incluir columnas de producto (nombre/producto) y cantidad.')
-      setRawRows([]); setUnified([]); setCompareRows([]); setAlerts([]); setGrandTotal(0)
-      return
+  // Validación FLEXIBLE: infiere columnas de producto/cantidad
+  const { productKey, qtyKey } = inferHeaders(rows as RawRow[]);
+  if (!rows.length || !productKey || !qtyKey) {
+    setCsvError(
+      "No pude identificar columnas de producto/cantidad. " +
+      "Verifica que el archivo tenga al menos una columna con nombres de artículo y otra con cantidades."
+    );
+    setRawRows([]); setUnified([]); setCompareRows([]); setAlerts([]); setGrandTotal(0);
+    return;
+  }
+
+  setCsvError(null);
+  setRawRows(rows as RawRow[]);
+  setCompareRows([]); setAlerts([]); setGrandTotal(0);
+
+  // Unificación robusta (tolerante a mayúsculas, acentos, orden, etc.)
+  setUnified(unify(rows as RawRow[]));
+};
+
+const unifiedCount = unified.length;
+const canCompare = unifiedCount > 0;
+
+/* ================== HELPERS ROBUSTOS ================== */
+
+// Normaliza strings: sin acentos, minúsculas, espacios compactados
+function norm(s: any) {
+  return String(s ?? "")
+    .normalize("NFD").replace(/\p{Diacritic}/gu, "")
+    .toLowerCase().trim().replace(/\s+/g, " ");
+}
+
+// Convierte cantidades: acepta "1,5", "1.500", "1 500", etc.
+function toNumber(v: any): number {
+  if (v == null || v === "") return 0;
+  const raw = String(v).replace(/\s/g, "").replace(/,/g, ".");
+  const m = raw.match(/-?\d+(\.\d+)?/);
+  const n = Number(m ? m[0] : NaN);
+  return Number.isFinite(n) ? n : 0;
+}
+
+// Sinónimos por campo (para cabeceras)
+const CANDS = {
+  product: [
+    "producto","nombre","product","name","item","description","product name","artículo","articulo"
+  ],
+  qty: [
+    "cantidad","qty","quantity","cant","cantidad total","total cantidad","qty total"
+  ],
+  sku: [
+    "sku","código","codigo","id","ref","reference","clave","num articulo","num artículo","ean","upc"
+  ],
+  unit: [
+    "unidad","unit","uom","unidad de medida","medida"
+  ],
+} as const;
+
+// Intenta encontrar una clave en el objeto basándose en candidatos + heurísticas
+function inferHeaderKey(keys: string[], kind: keyof typeof CANDS): string | null {
+  // Mapa normalizado → original
+  const normToOrig = new Map<string, string>();
+  keys.forEach(k => normToOrig.set(norm(k), k));
+
+  // 1) match exacto por sinónimos
+  for (const cand of CANDS[kind]) {
+    const found = normToOrig.get(norm(cand));
+    if (found) return found;
+  }
+
+  // 2) empieza-con
+  for (const k of keys) {
+    const nk = norm(k);
+    if (CANDS[kind].some(c => nk.startsWith(norm(c)))) return k;
+  }
+
+  // 3) incluye
+  for (const k of keys) {
+    const nk = norm(k);
+    if (CANDS[kind].some(c => nk.includes(norm(c)))) return k;
+  }
+
+  // 4) heurísticas por tipo (resueltas en inferHeaders)
+  return null;
+}
+
+// Analiza la primera página de datos para decidir por heurísticas
+function inferHeaders(rows: Record<string, any>[]) {
+  const first = rows[0] ?? {};
+  const keys = Object.keys(first);
+
+  let productKey = inferHeaderKey(keys, "product");
+  let qtyKey     = inferHeaderKey(keys, "qty");
+  let skuKey     = inferHeaderKey(keys, "sku");
+  let unitKey    = inferHeaderKey(keys, "unit");
+
+  // Heurística con muestras si falta algo
+  const sample = rows.slice(0, Math.min(50, rows.length));
+
+  if (!qtyKey) {
+    // Columna con mayor proporción de números > 0
+    let best: { key: string; score: number } | null = null;
+    for (const k of keys) {
+      const score = sample.reduce((acc, r) => acc + (toNumber(r[k]) > 0 ? 1 : 0), 0);
+      if (!best || score > best.score) best = { key: k, score };
     }
-
-    setCsvError(null)
-    setRawRows(rows)
-    setCompareRows([])
-    setAlerts([])
-    setGrandTotal(0)
-    setUnified(unify(rows))
+    if (best && best.score > 0) qtyKey = best.key;
   }
 
-  const rawCount = rawRows.length
-  const unifiedCount = unified.length
-  const canCompare = unifiedCount > 0
-
-  // ---------- Utilidades ----------
-  function normalizeKey(s: any) {
-    const v = String(s ?? '')
-      .normalize('NFD')
-      .replace(/\p{Diacritic}/gu, '')
-      .toLowerCase()
-      .trim()
-    return v.replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ')
-  }
-
-  function readQty(v: any): number {
-    const n = Number(v)
-    return Number.isFinite(n) ? n : 0
-  }
-
-  // Unificación: soporta español + equivalentes ingleses
-  function unify(rows: RawRow[]): UnifiedRow[] {
-    const map = new Map<string, UnifiedRow & { _count: number }>()
-    for (const r of rows) {
-      const product =
-        r.nombre ?? r.name ?? r.product ?? r.Producto ?? r.PRODUCTO ?? r.item ?? r.Item ?? r['product name'] ?? ''
-      const sku = r.sku ?? r.SKU ?? r.Sku
-      const unit = r.unidad ?? r.unit ?? r.UNIDAD ?? r.Unit
-      const qty =
-        r.cantidad ?? r.quantity ?? r.CANTIDAD ?? r.qty ?? r.Qty ?? r.QTY ?? r['cantidad total'] ?? r['Cantidad total']
-
-      const key = normalizeKey(product)
-      if (!key) continue
-
-      const prev = map.get(key)
-      if (!prev) {
-        map.set(key, {
-          product: String(product).toLowerCase(),
-          sku: sku ? String(sku) : undefined,
-          unit: unit ? String(unit).toLowerCase() : undefined,
-          quantity: readQty(qty),
-          mergedCount: 1,
-          _count: 1,
-        })
-      } else {
-        prev.quantity += readQty(qty)
-        prev.mergedCount += 1
-        prev._count += 1
-        map.set(key, prev)
-      }
+  if (!productKey) {
+    // Columna con textos más largos y diversos
+    let best: { key: string; score: number } | null = null;
+    for (const k of keys) {
+      const vals = sample.map(r => String(r[k] ?? "")).filter(Boolean);
+      if (!vals.length) continue;
+      const avgLen = vals.reduce((a, s) => a + s.length, 0) / vals.length;
+      const uniq = new Set(vals.map(v => norm(v))).size;
+      const score = avgLen * 0.7 + uniq * 0.3;
+      if (!best || score > best.score) best = { key: k, score };
     }
-    return Array.from(map.values()).map(({ _count, ...row }) => row)
+    if (best) productKey = best.key;
   }
 
-  // --- Filas para PDF a partir de compareRows (todas las ofertas) ---
+  if (!skuKey) {
+    // “Códigos”: muchos valores con 5+ chars, sin espacios, alfanum/guiones
+    let best: { key: string; score: number } | null = null;
+    for (const k of keys) {
+      const score = sample.reduce((acc, r) => {
+        const v = String(r[k] ?? "").trim();
+        if (!v) return acc;
+        const compact = v.replace(/\s/g, "");
+        const looks = (compact.length >= 5 && /^[0-9A-Za-z\-]+$/.test(compact)) ? 1 : 0;
+        return acc + looks;
+      }, 0);
+      if (!best || score > best.score) best = { key: k, score };
+    }
+    if (best && best.score > 0) skuKey = best.key;
+  }
+
+  return { productKey, qtyKey, skuKey, unitKey };
+}
+
+// Lee un valor de una fila por clave original (si falla, intenta por sinónimos)
+function readCell(row: Record<string, any>, key: string | null, fallbacks: readonly string[]): any {
+  if (key && Object.prototype.hasOwnProperty.call(row, key)) return row[key];
+  // fallback por sinónimos
+  const map = new Map<string, string>();
+  Object.keys(row).forEach(k => map.set(norm(k), k));
+  for (const fb of fallbacks) {
+    const real = map.get(norm(fb));
+    if (real) return row[real];
+  }
+  return undefined;
+}
+
+// ---------- Unificación flexible (usa las cabeceras inferidas) ----------
+function unify(rows: RawRow[]): UnifiedRow[] {
+  if (!rows || rows.length === 0) return [];
+
+  const { productKey, qtyKey, skuKey, unitKey } = inferHeaders(rows);
+
+  const bag = new Map<string, (UnifiedRow & { _count: number })>();
+
+  for (const r of rows) {
+    const productVal = readCell(r, productKey, CANDS.product);
+    const qtyVal     = readCell(r, qtyKey,     CANDS.qty);
+    const skuVal     = readCell(r, skuKey,     CANDS.sku);
+    const unitVal    = readCell(r, unitKey,    CANDS.unit);
+
+    const key = norm(productVal);
+    if (!key) continue;
+
+    const qty = toNumber(qtyVal);
+
+    const row: UnifiedRow = {
+      product: String(productVal ?? "").toLowerCase(),
+      sku: skuVal ? String(skuVal) : undefined,
+      unit: unitVal ? String(unitVal).toLowerCase() : undefined,
+      quantity: qty,
+      mergedCount: 1,
+    };
+
+    const prev = bag.get(key);
+    if (!prev) bag.set(key, { ...row, _count: 1 });
+    else {
+      prev.quantity += row.quantity;
+      prev.mergedCount += 1;
+      prev._count += 1;
+      bag.set(key, prev);
+    }
+  }
+
+  return Array.from(bag.values()).map(({ _count, ...row }) => row);
+}
+
+
+  
+
+  // ---------- Guardar lista (saved_lists) ----------
+  async function saveCurrentList(defaultName = 'Mi lista') {
+  const name = window.prompt('Nombre para guardar esta lista:', defaultName)?.trim()
+  if (!name) return
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return alert('Inicia sesión.')
+
+  // En la tabla solo existe "data".
+  const payload = { user_id: user.id, name, data: { raw: rawRows, unified } }
+
+  const { error } = await supabase.from('saved_lists').insert(payload)
+  if (error) alert('No se pudo guardar: ' + error.message)
+  else alert('Lista guardada.')
+}
+
+  // --- Filas para PDF ---
   const rowsForPdf: PdfRow[] = useMemo(() => {
     if (!compareRows.length) return []
     return compareRows.flatMap(r =>
@@ -196,7 +352,7 @@ export default function UploadList() {
     )
   }, [compareRows])
 
-  // ---------- Exportar CSV (Carrito Rápido: mejores ofertas) ----------
+  // ---------- Exportar CSV (Carrito Rápido) ----------
   function downloadCartCsv(rows: {
     product: string
     provider: string
@@ -244,47 +400,74 @@ export default function UploadList() {
     downloadCartCsv(best, 'carrito_rapido.csv')
   }
 
-  // ---------- Comparar precios aquí mismo ----------
-  const handleCompareHere = async () => {
-    if (!canCompare) return
-    setLoading(true)
-    setAlerts([])
 
-    const { data: { user } } = await supabase.auth.getUser()
 
-    // Límite por plan para la demo: Free=5, Premium=50, B2B=200
-    const sample = unified.slice(0, planLimit).map(u => ({
-      product: normalizeKey(u.product),
-      quantity: u.quantity || 1,
-    }))
+// ---------- Comparar precios (rápido y robusto) ----------
+const handleCompareHere = async () => {
+  if (!canCompare) return
+  setLoading(true)
+  setAlerts([])
 
-    const computed: CompareRow[] = []
-    for (const item of sample) {
-      const offers = await searchOffers(item.product, user?.id) // añade affiliateUrl si hay userId
-      const selected = bestOffer(offers)
-      computed.push({ ...item, offers, selected })
-    }
-    setCompareRows(computed)
+  const { data: { user } } = await supabase.auth.getUser()
 
-    const total = computed.reduce((acc, r) => {
+  const norm = (s: any) =>
+    String(s ?? '')
+      .normalize('NFD').replace(/\p{Diacritic}/gu, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+
+  const sample = unified
+    .slice(0, planLimit)
+    .map(u => ({ product: norm(u.product), quantity: u.quantity || 1 }))
+    .filter(it => it.product.length > 1)
+
+  // timeout helper
+  const withTimeout = <T,>(p: Promise<T>, ms = 6000): Promise<T> =>
+    Promise.race([
+      p,
+      new Promise<T>((_, rej) => setTimeout(() => rej(new Error('timeout')), ms)),
+    ])
+
+  try {
+    // ejecuta todas pero sin bloquearse si una falla o tarda
+    const MAX_OFFERS_PER_ITEM = 3;
+
+    const settled = await Promise.allSettled(
+      sample.map(async (item) => {
+        const raw = await withTimeout(searchOffers(item.product, user?.id), 6000);
+        const offers = collapseByProvider(raw).slice(0, MAX_OFFERS_PER_ITEM);
+        const selected = bestOffer(offers);
+        return { ...item, offers, selected } as CompareRow;
+      })
+    );
+
+    const rows: CompareRow[] = settled.map((s, i) =>
+      s.status === 'fulfilled'
+        ? s.value
+        : ({ ...sample[i], offers: [], selected: undefined } as CompareRow)
+    );
+
+
+    setCompareRows(rows)
+
+    const total = rows.reduce((acc, r) => {
       const unit = r.selected ? r.selected.price + r.selected.shipping : 0
       return acc + unit * r.quantity
     }, 0)
     setGrandTotal(total)
 
     if (user) {
-      const toPersist = computed
+      const toPersist = rows
         .filter(r => r.selected)
         .map(r => ({ product: r.product, quantity: r.quantity, chosen: r.selected! }))
       if (toPersist.length > 0) await saveHistory(user.id, toPersist)
 
       const news: { product: string; provider: string; message: string }[] = []
-      for (const r of computed) {
+      for (const r of rows) {
         if (!r.selected) continue
         const sel = r.selected
         const unit = sel.price + sel.shipping
 
-        // Baja de precio (>= 5%)
         const prev = await lastTotalFor(user.id, r.product, sel.provider)
         if (typeof prev === 'number' && prev > 0 && unit < prev) {
           const drop = (prev - unit) / prev
@@ -294,7 +477,6 @@ export default function UploadList() {
           }
         }
 
-        // Reabastecimiento (si prevTotal=0 -> ahora disponible)
         if (sel.available && typeof sel.prevTotal === 'number' && sel.prevTotal === 0 && unit > 0) {
           await createAlert(user.id, r.product, sel.provider, 'BACK_IN_STOCK', sel.prevTotal, unit)
           news.push({ product: r.product, provider: sel.provider, message: 'Disponible nuevamente' })
@@ -302,9 +484,12 @@ export default function UploadList() {
       }
       setAlerts(news)
     }
-
+  } finally {
     setLoading(false)
   }
+}
+
+
 
   // Limpiar borrador
   const handleClearDraft = async () => {
@@ -313,71 +498,56 @@ export default function UploadList() {
     setRawRows([]); setUnified([]); setCompareRows([]); setAlerts([]); setGrandTotal(0); setCsvError(null)
   }
 
-  // Columnas para tabla de preview (muestra TODO)
-  const previewColumns = useMemo(() => {
-    if (!rawRows[0]) return [] as string[]
-    return Object.keys(rawRows[0])
-  }, [rawRows])
+  // ---------- UI ----------
+return (
+  <div className="page-list">
+    {/* === 1) Subir lista === */}
+    <div className="card-soft list-upload">
+      <h2 style={{ margin: '0 0 6px' }}>1) Subir lista (CSV/XLSX)</h2>
 
-  return (
-    <div className="container">
-      {/* 1) Subir lista */}
-      <div className="card">
-        <h2>1) Subir lista (CSV/XLSX)</h2>
-        <input type="file" accept=".csv,.xlsx,.xls" onChange={(e) => handleFile(e.target.files?.[0] ?? null)} />
-        <p className="muted" style={{ marginTop: 8 }}>
-          Columnas recomendadas: <strong>nombre</strong> y <strong>cantidad</strong> (acepta equivalentes en español o inglés).
-        </p>
-        {csvError && (
-          <p className="muted" style={{ marginTop: 8, color: '#ffb4b4' }}>
-            {csvError}
-          </p>
-        )}
-        {(rawRows.length || unified.length) > 0 && (
-          <div className="actions" style={{ marginTop: 8 }}>
-            <button className="btn" onClick={handleClearDraft}>Limpiar borrador</button>
-          </div>
-        )}
+      <div style={{ margin: '4px 0 8px' }}>
+        <input
+          type="file"
+          accept=".csv,.xlsx,.xls"
+          onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
+          style={{ display: 'block', width: '100%' }}
+        />
       </div>
 
-      {/* 2) Previsualización */}
-      <div className="card" style={{ marginTop: 16 }}>
-        <h2>2) Previsualización de la lista cargada</h2>
-        <p>Filas: <strong>{rawCount}</strong></p>
-        {rawRows.length > 0 && (
-          <table>
-            <thead>
-              <tr>
-                {previewColumns.map(c => <th key={c}>{c}</th>)}
-              </tr>
-            </thead>
-            <tbody>
-              {rawRows.map((r, i) => (
-                <tr key={i}>
-                  {previewColumns.map(c => <td key={c}>{String(r[c])}</td>)}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+      <p className="muted">
+        Columnas recomendadas: <strong>nombre</strong> y <strong>cantidad</strong> (acepta equivalentes en español o inglés).
+      </p>
 
-      {/* 3) Lista unificada */}
-      <div className="card" style={{ marginTop: 16 }}>
-        <h2>3) Lista unificada</h2>
+      {csvError && (
+        <p className="muted" style={{ color: '#ffb4b4' }}>{csvError}</p>
+      )}
 
-        {unifiedCount === 0 ? (
-          <p className="muted">Aún no hay datos unificados.</p>
-        ) : (
-          <>
-            <table>
+      {(rawRows.length || unified.length) > 0 && (
+        <div className="actions-row">
+          <button className="btn btn-ghost btn-sm" onClick={handleClearDraft}>
+            Limpiar borrador
+          </button>
+        </div>
+      )}
+    </div>
+
+    {/* === 3) Lista unificada === */}
+    <div className="card-soft stack-md" style={{ marginTop: 16 }}>
+      <h3 className="section-title">3) Lista unificada</h3>
+
+      {unifiedCount === 0 ? (
+        <p className="muted">Aún no hay datos unificados.</p>
+      ) : (
+        <>
+          <div className="table-wrap">
+            <table className="table">
               <thead>
                 <tr>
                   <th>Producto</th>
                   <th>SKU</th>
-                  <th>Cantidad total</th>
-                  <th>Unidad</th>
-                  <th>Filas unificadas</th>
+                  <th className="center">Cantidad total</th>
+                  <th className="center">Unidad</th>
+                  <th className="center">Filas unificadas</th>
                 </tr>
               </thead>
               <tbody>
@@ -385,145 +555,144 @@ export default function UploadList() {
                   <tr key={i}>
                     <td style={{ textTransform: 'capitalize' }}>{u.product}</td>
                     <td>{u.sku ?? '—'}</td>
-                    <td>{u.quantity}</td>
-                    <td>{u.unit ?? '—'}</td>
-                    <td>{u.mergedCount}</td>
+                    <td className="center">{u.quantity}</td>
+                    <td className="center">{u.unit ?? '—'}</td>
+                    <td className="center">{u.mergedCount}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-
-            <div className="muted" style={{ marginTop: 8 }}>
-              Filas unificadas: <strong>{unifiedCount}</strong>
-            </div>
-
-            <div className="actions" style={{ marginTop: 12 }}>
-              <button className="btn primary" onClick={handleCompareHere} disabled={loading}>
-                {loading ? 'Procesando…' : 'Comparar precios'}
-              </button>
-            </div>
-
-            <p className="muted" style={{ marginTop: 8 }}>
-              Plan <strong style={{ textTransform: 'capitalize' }}>{plan}</strong>: se comparan hasta <strong>{planLimit}</strong> productos.
-            </p>
-          </>
-        )}
-      </div>
-
-      {/* 4) Resultados del comparativo */}
-      {compareRows.length > 0 && (
-        <div className="card" style={{ marginTop: 16 }}>
-          <h2>4) Resultados del comparativo</h2>
-
-          {alerts.length > 0 && (
-            <div className="card" style={{ marginTop: 8 }}>
-              <h3>Alertas</h3>
-              <ul>
-                {alerts.map((a, i) => (
-                  <li key={i}>[{a.provider}] {a.product}: {a.message}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          <div
-            className="card"
-            style={{
-              marginTop: 12,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 12,
-              flexWrap: 'wrap',
-            }}
-          >
-            <div>
-              <h3>Resumen</h3>
-              <p>Total del carrito: <strong>${grandTotal.toFixed(2)}</strong></p>
-            </div>
-            <div className="actions">
-              <button
-                className="btn"
-                onClick={() =>
-                  downloadComparePdf({
-                    title: 'Comparativo de precios — Mi Lista Inteligente',
-                    rows: rowsForPdf,
-                    grandTotal,
-                  })
-                }
-              >
-                Descargar PDF
-              </button>
-
-              <button className="btn" style={{ marginLeft: 8 }} onClick={handleDownloadCsv}>
-                Descargar CSV (Carrito rápido)
-              </button>
-            </div>
           </div>
 
-          <table>
-            <thead>
-              <tr>
-                <th>Producto</th>
-                <th>Proveedor</th>
-                <th>Precio</th>
-                <th>Envío</th>
-                <th>Total (unidad)</th>
-                <th>Cantidad</th>
-                <th>Total (línea)</th>
-                <th>Disp.</th>
-                <th>Comprar</th>
-              </tr>
-            </thead>
-            <tbody>
-              {compareRows.flatMap(r =>
-                r.offers.map(o => {
-                  const unit = o.price + o.shipping
-                  const line = unit * r.quantity
-                  const isBest = r.selected?.provider === o.provider
-                  return (
-                    <tr
-                      key={r.product + o.provider}
-                      style={{
-                        background: isBest ? 'rgba(34,197,94,.15)' : '',
-                        color: isBest ? '#eafff1' : '',
-                        fontWeight: isBest ? 'bold' : 'normal',
-                      }}
-                    >
-                      <td style={{ textTransform: 'capitalize' }}>{r.product}</td>
-                      <td>
-                        {o.provider}{' '}
-                        {isBest && <span className="badge ok" style={{ marginLeft: 6 }}>Mejor opción</span>}
-                      </td>
-                      <td>${o.price.toFixed(2)}</td>
-                      <td>${o.shipping.toFixed(2)}</td>
-                      <td>${unit.toFixed(2)}</td>
-                      <td>{r.quantity}</td>
-                      <td>${line.toFixed(2)}</td>
-                      <td>{o.available ? <span className="badge ok">Sí</span> : <span className="badge no">No</span>}</td>
-                      <td>
-                        {o.affiliateUrl ? (
-                          <a
-                            className="btn"
-                            href={o.affiliateUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            onClick={() => trackClick(r.product, o.provider, o.affiliateUrl)}
-                          >
-                            Comprar
-                          </a>
-                        ) : (
-                          <span className="muted">—</span>
-                        )}
-                      </td>
-                    </tr>
-                  )
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+          <div className="muted">Filas unificadas: <strong>{unifiedCount}</strong></div>
+
+          <div className="actions-row">
+            <button className="btn btn-sm" onClick={handleCompareHere} disabled={loading}>
+              {loading ? 'Procesando…' : 'Comparar precios'}
+            </button>
+            <button className="btn btn-sm" onClick={() => saveCurrentList('Mi lista')}>
+              Guardar lista
+            </button>
+          </div>
+
+          <p className="muted foot-note">
+            Plan <strong style={{ textTransform: 'capitalize' }}>{plan}</strong>: se comparan hasta <strong>{planLimit}</strong> productos.
+          </p>
+        </>
       )}
     </div>
-  )
+
+    {/* === 4) Resultados del comparativo === */}
+{compareRows.length > 0 && (
+  <div className="card-soft stack-md" style={{ marginTop: 16 }}>
+    <h3 className="section-title">4) Resultados del comparativo</h3>
+
+    {alerts.length > 0 && (
+      <div className="card-soft" style={{ marginTop: 8 }}>
+        <h3 className="section-title">Alertas</h3>
+        <ul className="stack-md" style={{ marginTop: 6 }}>
+          {alerts.map((a, i) => (
+            <li key={i}>[{a.provider}] {a.product}: {a.message}</li>
+          ))}
+        </ul>
+      </div>
+    )}
+
+    <div className="card-soft" style={{ marginTop: 12 }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, flexWrap:'wrap' }}>
+        <div>
+          <h4 className="section-title" style={{ marginBottom: 4 }}>Resumen</h4>
+          <p>Total del carrito: <strong>${grandTotal.toFixed(2)}</strong></p>
+        </div>
+        <div className="actions-row" style={{ justifyContent: 'flex-start' }}>
+          <button
+            className="btn btn-sm"
+            onClick={() => downloadComparePdf({
+              title: 'Comparativo de precios — Mi Lista Inteligente',
+              rows: rowsForPdf,
+              grandTotal,
+            })}
+          >
+            Descargar PDF
+          </button>
+          <button className="btn btn-sm" onClick={handleDownloadCsv}>
+            Descargar CSV (Carrito rápido)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div className="compare-wrap">
+      <table className="compare">
+        <colgroup>
+          <col className="c-product" />
+          <col className="c-provider" />
+          <col className="c-price" />
+          <col className="c-ship" />
+          <col className="c-unit" />
+          <col className="c-qty" />
+          <col className="c-line" />
+          <col className="c-avail" />
+          <col className="c-buy" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th className="col-product">Producto</th>
+            <th className="col-provider">Proveedor</th>
+            <th className="col-price center">Precio</th>
+            <th className="col-ship center">Envío</th>
+            <th className="col-unit center">Total (unidad)</th>
+            <th className="col-qty center">Cantidad</th>
+            <th className="col-line center">Total (línea)</th>
+            <th className="col-avail center">Disp.</th>
+            <th className="col-buy center">Comprar</th>
+          </tr>
+        </thead>
+        <tbody>
+          {compareRows.flatMap((r) =>
+            r.offers.map((o, idx) => {
+              const unit = o.price + o.shipping;
+              const line = unit * r.quantity;
+              const isBest = r.selected?.provider === o.provider;
+
+              return (
+                <tr key={`${r.product}-${o.provider}-${idx}`} className={isBest ? 'best-row' : ''}>
+                  <td className="wrap2">{r.product}</td>
+                  <td className="provider-cell">
+                    <span className="provider-txt">{o.provider}</span>
+                    {isBest && <span className="badge-best">Mejor opción</span>}
+                  </td>
+                  <td className="center num">${o.price.toFixed(2)}</td>
+                  <td className="center num col-ship">${o.shipping.toFixed(2)}</td>
+                  <td className="center num">${unit.toFixed(2)}</td>
+                  <td className="center num">{r.quantity}</td>
+                  <td className="center num">${line.toFixed(2)}</td>
+                  <td className="center">{o.available ? <span className="pill ok">Sí</span> : <span className="pill no">No</span>}</td>
+                  <td className="center">
+                    {o.affiliateUrl ? (
+                      <a
+                        className="btn-buy"
+                        href={o.affiliateUrl}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        onClick={() => trackClick(r.product, o.provider, o.affiliateUrl)}
+                      >
+                        Comprar
+                      </a>
+                    ) : (
+                      <span className="muted">—</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })
+          )}
+        </tbody>
+      </table>
+    </div>
+  </div>
+)}
+
+</div> 
+); 
 }

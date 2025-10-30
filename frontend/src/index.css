@@ -1,268 +1,777 @@
-/* ---------- Base ---------- */
+/* ============== TOKENS & THEME ============== */
 :root{
-  --bg:#0b1321;
-  --bg-2:#0e172a;
-  --card:#111a2e;
-  --card-2:#0f1930;
-  --muted:#9fb0c0;
-  --text:#e8f0ff;
-  --brand-1:#60a5fa;
-  --brand-2:#34d399;
-  --accent:#7c3aed;
-  --ok:#22c55e;
-  --no:#ef4444;
-  --ring:rgba(100,116,139,.25);
-  --shadow: 0 10px 30px rgba(2,6,23,.35);
+  --bg:#0f1115; --panel:#111623;
+  --text:#e7ecf7; --muted:#9aa6bd;
+  --border:rgba(148,163,184,.12);
+  --brand-1:#5b5bf7; --brand-2:#7a5bff;
+  --ring:rgba(90,130,255,.22);
+  --side-bg:#0e1320; --side-text:#e9ecf3; --side-muted:#a7b1c6; --side-border:rgba(255,255,255,.10);
+  --card:rgba(255,255,255,.03); --card-2:rgba(255,255,255,.02);
+  --shadow:0 14px 34px rgba(0,0,0,.28);
+  --shadow-lg:0 18px 40px rgba(0,0,0,.35);
+  --r:14px;
+  --side-w:260px;
+  --topbar-h:64px; /* desktop por defecto */
+}
+:root{ color-scheme:dark }
+
+@media (max-width:760px){
+  :root{ --topbar-h:56px; } /* móvil */
 }
 
+[data-theme="light"]{
+  --bg:#f6f7fb; --panel:#ffffff;
+  --text:#0f1526; --muted:#667089;
+  --border:rgba(0,0,0,.10);
+  --card:rgba(0,0,0,.02); --card-2:rgba(0,0,0,.01);
+  --shadow:0 14px 34px rgba(0,0,0,.12);
+  --shadow-lg:0 18px 40px rgba(0,0,0,.14);
+}
+[data-theme="light"]{ color-scheme:light }
+
+/* ============== BASE ============== */
+html, body, #root{ height:100% }
 *{ box-sizing:border-box }
-html,body,#root{ height:100% }
 body{
-  margin:0;
-  color:var(--text);
-  background:
-    radial-gradient(1200px 800px at -10% -20%, #1f2937 0%, transparent 60%),
-    radial-gradient(1200px 800px at 120% -10%, #0b1220 0%, transparent 60%),
-    var(--bg);
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji','Segoe UI Emoji';
-  line-height:1.45;
+  margin:0; background:var(--bg); color:var(--text);
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 }
 
-/* ---------- Layout ---------- */
-.wrap{ width: min(1100px, 92%); margin: 0 auto; }
+/* ============== APP SHELL ============== */
+.app-shell{
+  min-height:100vh;
+  display:grid;
+  grid-template-rows: var(--topbar-h) 1fr;
+  grid-template-columns: var(--side-w) 1fr;
+  grid-template-areas: "topbar topbar" "sidebar content";
+}
 
-.page{ padding: 28px 0 60px; }
-
-/* ---------- Topbar ---------- */
+/* topbar */
 .topbar{
-  position: sticky; top:0; z-index:50;
-  backdrop-filter: blur(10px);
-  background: rgba(2,6,23,.45);
-  border-bottom: 1px solid rgba(148,163,184,.12);
-}
-.topbar .wrap{
+  grid-area:topbar;
+  position:sticky; top:0; z-index:70;
   display:flex; align-items:center; justify-content:space-between;
-  gap: 16px; padding: 12px 0;
+  padding:0 16px;
+  background:rgba(2,6,23,.55);
+  backdrop-filter: blur(10px);
+  border-bottom:1px solid var(--border);
 }
-.brand{
-  text-decoration:none;
-  font-weight:800; letter-spacing:.2px;
-  font-size: 18px;
-  background: linear-gradient(90deg,var(--brand-1),var(--brand-2));
-  -webkit-background-clip:text; background-clip:text;
-  color: transparent;
+.brand-left{ display:flex; align-items:center; gap:10px; min-width:0; }
+.topbar .logo-udg{ width:28px; height:28px; object-fit:contain; display:block; }
+.app-title{ font-weight:800; letter-spacing:.2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.app-sub{ font-size:.78rem; color:var(--muted); margin-top:2px; }
+[data-theme="light"] .app-sub{ color:#0d1321; }
+
+.top-actions{ display:flex; align-items:center; gap:10px; }
+.icon-btn{
+  width:36px; height:36px; border-radius:10px;
+  border:1px solid var(--border);
+  background:#0c1020; color:#fff;
+  display:grid; place-items:center; cursor:pointer;
 }
-.menu{ display:flex; align-items:center; gap: 14px; }
-.menu a{
-  color: var(--muted);
-  text-decoration:none;
-  font-weight:600;
-  padding: 6px 10px;
+.icon-btn:hover{ box-shadow:0 8px 20px rgba(0,0,0,.28) }
+.icon-btn :is(svg, path, circle, line, polygon){
+  fill: currentColor; stroke: currentColor;
+}
+.avatar{
+  width:32px; height:32px; border-radius:999px;
+  display:grid; place-items:center;
+  background:#121a2f; border:1px solid var(--border);
+  color:#9fb6ff; font-weight:700;
+}
+
+/* sidebar */
+.sidebar{
+  grid-area:sidebar;
+  background:var(--side-bg); color:var(--side-text);
+  border-right:1px solid var(--side-border);
+  position:sticky; top:var(--topbar-h);
+  height:calc(100vh - var(--topbar-h));
+  overflow:auto; contain:content;
+}
+.side-header{ padding:14px; display:flex; align-items:center; gap:10px }
+.sidebar .logo-udg{ width:42px; height:42px; object-fit:contain }
+.side-title{ font-weight:800; font-size:1rem; letter-spacing:.2px }
+
+.nav{ padding:8px 10px 16px; display:flex; flex-direction:column; gap:6px }
+.nav .group{ color:var(--side-muted); font-size:.82rem; padding:6px 8px 2px }
+.nav a{
+  display:flex; gap:10px; align-items:center;
+  min-height:44px;
+  padding:10px 12px; border-radius:10px;
+  color:var(--side-text); text-decoration:none;
+  border:1px solid transparent; box-sizing:border-box;
+}
+.nav a:hover{ background:rgba(255,255,255,.06); box-shadow:0 8px 20px rgba(0,0,0,.18) }
+.nav a.active{
+  background:rgba(124,92,255,.18); border-color:rgba(124,92,255,.45);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+}
+
+/* content */
+.content{ grid-area:content; padding:20px; display:flex; justify-content:center; }
+.wrap{ width:min(1040px, 94%); margin:0 auto; }
+.card{
+  background:linear-gradient(180deg, var(--card), var(--card-2));
+  border:1px solid var(--border); border-radius:14px;
+  padding:18px; box-shadow:var(--shadow);
+}
+
+/* ============== FORMS & BUTTONS ============== */
+.label{ display:block; font-size:.9rem; font-weight:700; color:var(--muted); margin:0 0 6px }
+.field{ margin:12px 0 }
+
+input[type="text"], input[type="email"], input[type="password"], input[type="file"]{
+  background:#0e1530; color:#eaf1ff;
+  border:1px solid rgba(148,163,184,.18);
+  height:42px; border-radius:10px; padding:0 12px; outline:0; width:100%;
+}
+input:focus{ border-color:var(--brand-1); box-shadow:0 0 0 3px var(--ring) }
+
+/* File input button */
+input[type="file"]::file-selector-button{
+  margin-right:10px; height:34px; padding:0 14px;
+  border:0; border-radius:10px; cursor:pointer;
+  color:#07131f;
+  background:linear-gradient(92deg, var(--brand-1), var(--brand-2));
+  box-shadow:0 10px 26px rgba(32,42,80,.28), inset 0 0 0 1px rgba(255,255,255,.06);
+}
+.file-help-space{ margin-top:8px }
+
+/* Botones */
+.btn{
+  appearance:none; cursor:pointer; user-select:none;
+  display:inline-flex; align-items:center; justify-content:center;
+  height:42px; padding:0 16px; border-radius:10px; border:0;
+  font-weight:700; letter-spacing:.2px; width:100%;
+  color:#07131f;
+  background:linear-gradient(92deg, var(--brand-1), var(--brand-2));
+  box-shadow:0 12px 28px rgba(0,0,0,.40);
+}
+.btn:hover{ filter:saturate(1.06) brightness(1.03) }
+.btn.outline{
+  background:#0a1222; color:var(--text);
+  border:1px solid rgba(148,163,184,.18); box-shadow:none;
+}
+
+/* ============== AUTH (login) ============== */
+.auth-screen{ min-height:100vh }
+.auth-header{ display:flex; align-items:center; gap:12px; justify-content:center; padding:18px 16px 6px }
+.auth-header .logo-udg{ width:64px; height:64px }
+.auth-center{ display:grid; place-items:center; padding:10px 16px 60px }
+.auth-card{
+  width:min(520px, 92%);
+  background:linear-gradient(180deg, var(--card), var(--card-2));
+  border:1px solid var(--border); border-radius:16px;
+  padding:22px; box-shadow:var(--shadow-lg)
+}
+.auth-title{ text-align:center; font-size:20px; margin:0 0 8px }
+.auth-sub{ text-align:center; color:var(--muted); margin:0 0 14px }
+.input-wrap{ position:relative }
+.input.has-addon{ padding-right:48px }
+.input-addon{
+  position:absolute; right:6px; top:50%; transform:translateY(-50%);
+  width:32px; height:32px; border-radius:8px; display:grid; place-items:center;
+  border:1px solid var(--border); background:#0c0f17; cursor:pointer;
+}
+.input-addon svg{ pointer-events:none }
+.actions{ display:grid; gap:10px; margin-top:12px }
+.credits{ margin-top:14px; text-align:center; color:var(--muted); font-size:.9rem }
+.credits-list{ margin:4px 0 0; padding:0; list-style:none }
+
+/* ============== RESPONSIVE ============== */
+/* 📱 Móvil: sidebar como drawer */
+@media (max-width: 760px){
+  .app-shell{
+    grid-template-columns: 1fr;
+    grid-template-areas: "topbar" "content"; /* sidebar sale del flujo */
+  }
+
+  .hamburger{
+    display:grid;
+    width:36px; height:36px; border-radius:10px;
+    border:1px solid var(--border);
+    background:#0c1020; color:#fff; place-items:center; cursor:pointer;
+  }
+  .hamburger svg, .hamburger svg *{ fill:currentColor; stroke:currentColor; }
+
+  /* Drawer */
+  aside.sidebar{
+    position: fixed; left:0; top:var(--topbar-h);
+    height: calc(100vh - var(--topbar-h));
+    width: 82vw; max-width: 320px;
+    transform: translateX(-100%);
+    transition: transform .25s ease, box-shadow .25s ease;
+    z-index: 60;
+    box-shadow: 18px 0 40px rgba(0,0,0,.35);
+    display:block;
+  }
+  aside.sidebar.open{ transform: translateX(0); }
+
+  /* Backdrop */
+  .backdrop{
+    position: fixed; inset:0;
+    background: rgba(0,0,0,.45);
+    opacity: 0; pointer-events: none;
+    transition: opacity .2s ease; z-index:50;
+  }
+  .backdrop.show{ opacity:1; pointer-events:auto; }
+
+  /* Contenido */
+  .content{ padding-top:12px; }
+  .wrap{ width:min(96%, 720px); }
+}
+
+/* 💻 Tablet */
+@media (min-width: 761px) and (max-width: 1100px){
+  :root{ --side-w:220px }
+  .wrap{ width:min(92%, 880px) }
+}
+
+
+/* =========== LISTA: utilidades y overrides =========== */
+
+/* 1) Botones: por defecto tamaño “contenido” en la app */
+.btn{ width:auto }                  /* antes era 100% (mantenemos full en login abajo) */
+.btn-sm{ height:36px; padding:0 14px; border-radius:8px; font-weight:700 }
+.btn-ghost{ background:transparent; color:var(--text); border:1px solid var(--border); box-shadow:none }
+.btn-ghost:hover{ background:rgba(255,255,255,.04) }
+
+/* Mantener login igual que siempre (full width) */
+.auth-card .btn{ width:100% }
+
+/* 2) Filas/espaciado vertical cómodo */
+.stack-sm > * + *{ margin-top:8px }
+.stack-md > * + *{ margin-top:12px }
+.stack-lg > * + *{ margin-top:16px }
+
+/* 3) File input con espacio arriba y abajo */
+.file-row{ padding:10px 0 }         /* espacio superior e inferior */
+.file-help-space{ margin-top:8px }  /* ya existe en tu CSS, lo respetamos */
+
+/* 4) Barra de acciones compacta y ordenada */
+.actions-row{
+  display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end;
+  margin-top:12px;
+}
+
+/* 5) Tabla “Lista unificada” más limpia */
+.table-wrap{ overflow:auto; border:1px solid var(--border); border-radius:10px; background:rgba(255,255,255,.02) }
+.table{ width:100%; border-collapse:separate; border-spacing:0 }
+.table th, .table td{
+  padding:10px 12px; text-align:left; border-bottom:1px solid var(--border); white-space:nowrap;
+}
+.table thead th{
+  font-size:.9rem; letter-spacing:.2px; color:var(--muted); background:rgba(255,255,255,.03);
+  position:sticky; top:0; z-index:1;
+}
+.table tbody tr:nth-child(even){ background:rgba(255,255,255,.02) }
+.table-compact th, .table-compact td{ padding:8px 10px }
+.table .num{ text-align:right; font-variant-numeric: tabular-nums }
+
+/* 6) Títulos de sección y tarjetas */
+.section-title{ margin:0 0 8px; font-size:1.05rem; font-weight:800 }
+.card-soft{ background:linear-gradient(180deg, var(--card), var(--card-2)); padding:16px; border:1px solid var(--border); border-radius:14px }
+
+
+/* ===== LISTA (UploadList) ===== */
+.page-list .btn { width: auto !important; }     /* quita ancho completo SOLO aquí */
+.auth-card .btn { width: 100%; }                /* mantiene login igual */
+
+.page-list .btn-sm { height: 36px; padding: 0 14px; border-radius: 10px; font-weight: 700; }
+.page-list .btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--border); box-shadow: none; }
+.page-list .btn-ghost:hover { background: rgba(255,255,255,.04); }
+
+.page-list .card-soft { 
+  background: linear-gradient(180deg, var(--card), var(--card-2));
+  padding: 16px; border: 1px solid var(--border); border-radius: 14px;
+}
+
+.page-list .section-title { margin: 0 0 10px; font-size: 1.1rem; font-weight: 800; }
+
+.page-list .stack-md > * + * { margin-top: 12px; }
+
+/* Bloque del input de archivo con aire arriba y abajo */
+.page-list .file-block { padding: 12px 0; }
+
+/* Barra de acciones de sección: compacta y ordenada */
+.page-list .actions-row {
+  display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: flex-end;
+}
+
+/* Tabla bonita y compacta */
+.page-list .table-wrap { 
+  overflow: auto; border: 1px solid var(--border); border-radius: 12px; 
+  background: rgba(255,255,255,.02);
+}
+.page-list table.table { width: 100%; border-collapse: separate; border-spacing: 0; }
+.page-list .table th, 
+.page-list .table td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; }
+.page-list .table thead th { 
+  font-size: .9rem; letter-spacing: .2px; color: var(--muted); 
+  background: rgba(255,255,255,.03); position: sticky; top: 0; z-index: 1;
+}
+.page-list .table tbody tr:nth-child(even) { background: rgba(255,255,255,.02); }
+.page-list .table .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Pie con nota */
+.page-list .foot-note { margin-top: 6px; }
+
+
+/* UploadList: más padding interior para que el input no quede pegado */
+.page-list .card-soft { padding: 24px 18px; }
+
+/* Bloque del input de archivo con aire arriba y abajo real */
+.page-list .file-block { margin-top: 8px; padding: 16px 0 18px; }
+
+/* Centrado solo para columnas específicas */
+.page-list .table .center { text-align: center; }
+
+
+/* Opcional: botón del selector algo más compacto/bonito */
+.page-list .list-upload input[type="file"]::file-selector-button{
+  height: 36px;
+  padding: 0 12px;
   border-radius: 8px;
 }
-.menu a.active{ color: var(--text); background: rgba(99,102,241,.12); }
-.linklike{
-  all: unset; cursor:pointer;
-  color: var(--muted);
-  padding: 6px 10px; border-radius: 8px;
-}
-.linklike:hover, .menu a:hover{ color: var(--text); }
-
-/* ---------- Cards / Containers ---------- */
-.container{ display:grid; gap: 16px; }
-.card{
-  background: linear-gradient(180deg, var(--card), var(--card-2));
-  border: 1px solid rgba(148,163,184,.12);
-  border-radius: 16px;
-  padding: 18px;
-  box-shadow: var(--shadow);
-}
-h1,h2,h3{ margin: 0 0 10px }
-.muted{ color: var(--muted) }
-.actions{ display:flex; gap:8px; flex-wrap:wrap }
-
-/* ---------- Inputs / Buttons ---------- */
-input[type="file"],
-input[type="email"], input[type="password"], input[type="text"]{
-  color: var(--text);
-  background: #0b1426;
-  border: 1px solid rgba(148,163,184,.18);
-  padding: 10px 12px;
-  border-radius: 10px;
-  outline: none;
-}
-input:focus{ border-color: var(--brand-1); box-shadow: 0 0 0 3px var(--ring) }
-
-.btn{
-  appearance: none; border: 1px solid rgba(148,163,184,.18);
-  background: #0a1222; color: var(--text);
-  padding: 10px 14px; border-radius: 10px;
-  cursor: pointer; font-weight: 600;
-}
-.btn:hover{ border-color: rgba(148,163,184,.35) }
-.btn.primary{
-  border-color: transparent;
-  background: linear-gradient(90deg,var(--brand-1),var(--brand-2));
-  color:#001018;
-}
-.badge{ padding:2px 8px; border-radius:999px; font-size:12px }
-.badge.ok{ background: rgba(34,197,94,.15); color:#b8ffd1 }
-.badge.no{ background: rgba(239,68,68,.15); color:#ffd3d3 }
-
-/* ---------- Tables ---------- */
-table{ width:100%; border-collapse: collapse; margin-top: 10px; }
-th, td{ text-align:left; padding: 10px 12px; font-size: 14px; }
-thead th{
-  color: var(--muted);
-  border-bottom: 1px solid rgba(148,163,184,.14);
-  font-weight:700;
-}
-tbody tr{ border-bottom: 1px dashed rgba(148,163,184,.1) }
-tbody tr:hover{ background: rgba(148,163,184,.05) }
 
 
-/* --- Login ordenado y alineado --- */
-.auth-center{
-  min-height: calc(100vh - 90px);
-  display: grid;
-  place-items: start center;      /* usa 'center' si quieres centrado vertical */
-  padding-top: 32px;
+/* Solo afecta esta tarjeta de la página Lista */
+.page-list .list-upload{
+  padding-top: 40px;   /* aire moderado arriba */
+  padding-bottom: 14px;/* aire moderado abajo */
 }
-.auth-card{ width: min(900px, 96%); padding: 26px 26px 22px; }
-.auth-card h1{ font-size: 28px; margin: 0 0 6px; }
-.sub{ margin-top: 2px; }
 
-.form-grid{
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  margin: 16px 0 10px;
+/* (por si algún estilo global empuja el h2) */
+.page-list .list-upload h2{ margin: 0 0 6px !important; }
+
+/* no alteres el input; el aire ya lo dan los márgenes del wrapper */
+
+
+/* Encabezado más compacto, evita que salte a 2 líneas */
+.page-list table.compare thead th{
+  font-size: .86rem;
+  white-space: nowrap;
 }
-.form-grid label{ display:flex; flex-direction:column; gap:6px }
-.form-grid label span{ font-weight: 700; color: var(--muted); font-size: 13px }
-.form-grid input{ width: 100% }
 
+/* Números: que no se partan ($11.90 no en dos líneas), alineados y uniformes */
+.page-list .num, 
+.page-list .nowrap{
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;  /* columnas de números alineadas */
+}
+
+/* Celdas numéricas un poquito más compactas */
+.page-list .num { padding-left: 8px; padding-right: 8px; }
+
+/* Botón comprar aún más compacto en filas largas */
+@media (max-width: 1280px){
+  .page-list .btn-buy{ min-width: 72px; padding: 0 8px; height: 28px; font-size: .78rem; }
+}
+
+/* Por si el contenedor cortaba a la derecha en algunos temas */
+.page-list .compare-wrap{ overflow-x: auto; }
+.page-list .card-soft, .page-list .card { overflow: visible; }
+
+/* Sombra sutil bajo el thead sticky (mejor lectura al hacer scroll) */
+.page-list table.compare thead { box-shadow: 0 2px 0 rgba(0,0,0,.06); }
+
+/* Fila best más pareja en claro/oscuro (ya lo tenías, pero un pelín más suave) */
+.page-list tr.best-row { background: rgba(16,185,129,.18); }
+@media (prefers-color-scheme: light){
+  .page-list tr.best-row{ background:#e8f9ef; }
+  .page-list .badge-best{ background:#e8f9ef; color:#065f46; border-color:#16a34a; }
+}
+
+/* Asegura que el link no salga subrayado y se vea como botón */
+.page-list .compare td a { text-decoration: none !important; }
+.page-list .compare td a.btn-buy{
+  display:inline-flex; align-items:center; justify-content:center;
+  height:30px; padding:0 10px; min-width:88px;
+  border-radius:10px; background:#6d5af0; color:#fff; font-weight:800; font-size:.82rem;
+  border:1px solid rgba(255,255,255,.12); box-shadow:0 6px 18px rgba(109,90,240,.25);
+  white-space:nowrap;
+}
+.page-list .compare td a.btn-buy:hover{
+  transform:translateY(-1px); box-shadow:0 8px 22px rgba(109,90,240,.33);
+}
+
+.page-list .provider-cell{
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+}
+.page-list .provider-txt{
+  overflow:hidden; display:-webkit-box;
+  -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  line-clamp: 2; word-break: break-word;
+}
+
+
+/* ===== Bloque anti-desbordes para todas las tablas de la página Lista ===== */
+
+/* Nunca permitas scroll horizontal global */
+html, body, #root { overflow-x: hidden; }
+
+/* Contenedores de tabla dentro de la página Lista */
+.page-list .table-wrap,
+.page-list .table-card,
+.page-list .compare-wrap {
+  width: 100%;
+  overflow-x: hidden;  /* evitamos scroll lateral del contenedor */
+}
+
+/* CUALQUIER tabla dentro de la página Lista: ocupa 100% y reparte columnas */
+.page-list table {
+  width: 100%;
+  table-layout: fixed;      /* obliga a que las celdas encojan */
+  border-collapse: collapse;
+}
+
+/* Celdas: pueden encoger y partir palabras largas */
+.page-list table th,
+.page-list table td {
+  min-width: 0;
+  white-space: normal;      /* permite salto de línea */
+  word-break: break-word;   /* parte palabras largas */
+  overflow-wrap: anywhere;  /* parte URLs/strings sin espacios */
+}
+
+/* Números compactos que no “bailen” */
+.page-list .num { 
+  white-space: nowrap; 
+  font-variant-numeric: tabular-nums; 
+}
+
+/* ——— Ajustes específicos “Lista unificada” ——— */
+.page-list table.table-unified .col-product { width: 60%; }
+.page-list table.table-unified .col-sku     { width: 40%; }
+
+/* ——— Ajustes específicos “Comparativo” (desktop) ——— */
+/* Si te quedas corto de espacio, puedes comprimir un poco las columnas numéricas */
+.page-list table.compare .col-price,
+.page-list table.compare .col-qty,
+.page-list table.compare .col-line,
+.page-list table.compare .col-avail,
+.page-list table.compare .col-buy {
+  width: 9%;
+}
+
+/* ——— Vista móvil ≤ 720px ——— */
 @media (max-width: 720px){
-  .form-grid{ grid-template-columns: 1fr }
-  .auth-center{ place-items: center }
+  .page-list table { font-size: .88rem; }
+  .page-list table th,
+  .page-list table td { padding: 8px 10px; }
+
+  /* Lista unificada: Producto 65% / SKU 35% en móvil */
+  .page-list table.table-unified .col-product { width: 65%; }
+  .page-list table.table-unified .col-sku     { width: 35%; }
+
+  /* Comparativo: comprimir columnas numéricas y botón */
+  .page-list table.compare .col-price { width: 12%; }
+  .page-list table.compare .col-qty   { width: 8%;  }
+  .page-list table.compare .col-line  { width: 12%; }
+  .page-list table.compare .col-avail { width: 5%;  }
+  .page-list table.compare .col-buy   { width: 8%;  }
+
+  /* Botón comprar compacto y sin subrayado */
+  .page-list .btn-buy{
+    height: 28px; min-width: 78px; padding: 0 10px; font-size: .78rem;
+    text-decoration: none !important;
+  }
+}
+
+/* ——— Móviles muy pequeños ≤ 480px ——— */
+@media (max-width: 480px){
+  .page-list table { font-size: .82rem; }
+  .page-list table th,
+  .page-list table td { padding: 7px 8px; }
+
+  .page-list table.table-unified .col-product { width: 68%; }
+  .page-list table.table-unified .col-sku     { width: 32%; }
+
+  .page-list .btn-buy{
+    height: 26px; min-width: 66px; padding: 0 8px; font-size: .74rem;
+  }
 }
 
 
-/* header más ordenado */
-.topbar-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+/* contenedor de acciones en una sola fila */
+.actions-inline{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:nowrap;
+  white-space:nowrap;        /* evita saltos raros */
 }
 
-.plan-picker {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+/* botón compacto y consistente */
+.btn--compact{
+  padding:6px 12px;
+  font-size:12px;
+  line-height:1;
+  border-radius:10px;
+  height:auto;
 }
 
-.plan-select {
-  padding: 6px 10px;
-  height: 32px;
-  min-width: 120px;
+/* variantes visuales */
+.btn--compact.outline{
+  background:transparent;
+  border:1px solid var(--card-border, #2b3242);
 }
 
-/* cards más “elevadas” */
-.card {
-  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
-  border: 1px solid rgba(255,255,255,0.06);
+.btn--compact.secondary{
+  background:transparent;
+  border:0;
+  box-shadow:none;
+  opacity:.9;
+}
+
+/* móvil: si no cabe, scroll horizontal solo en la fila de acciones */
+@media (max-width:640px){
+  .actions-inline{
+    overflow-x:auto;
+    scrollbar-width:thin;
+    -webkit-overflow-scrolling:touch;
+  }
+}
+
+
+/* ===== Confirm Modal ===== */
+/* --- Modal --- */
+.modal-backdrop{
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.72);         /* más oscuro */
+  display: grid; place-items: center;
+  z-index: 9999;
+}
+
+/* Fuerza tarjeta sólida y legible, sin transparencias del tema */
+.modal-card{
+  opacity: 1 !important;
+  background: #0f141b !important;      /* opaco */
+  color: #e8eef8;
+  border: 1px solid rgba(255,255,255,.12);
   border-radius: 14px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  padding: 18px 20px;
+  box-shadow: 0 28px 90px rgba(0,0,0,.65);
+  max-width: 520px;
+  width: min(520px, 92vw);
+  isolation: isolate;                   /* evita mezclas raras */
 }
 
-/* títulos */
-.card h2, .card h3 {
-  letter-spacing: .2px;
+/* Tipografía y acciones */
+.modal-card h3{ margin:0 0 6px; color:#fff; font-weight:700; }
+.modal-card p{ margin:6px 0 0; color:#cbd5e1; }
+
+.modal-actions{
+  margin-top: 14px;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+/* Botón de confirmación rojo */
+.btn.danger{
+  background: #b42318;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.08);
+}
+.btn.danger:hover{ filter: brightness(1.06); }
+
+
+/* === Modal: fixes específicos para TEMA CLARO === */
+:root.Light .modal-card{
+  background: #ffffff !important;
+  color: #0f172a !important;              /* texto principal oscuro */
+  box-shadow: 0 24px 80px rgba(0,0,0,.18);
+}
+
+/* El "Cancelar" es ghost -> debe verse en claro */
+:root.Light .modal-card .btn-ghost{
+  background: #ffffff !important;         /* fondo visible (no transparente)  */
+  color: #0f172a !important;              /* texto oscuro                    */
+  border: 1px solid #cbd5e1 !important;   /* borde gris para contraste       */
+}
+
+:root.Light .modal-card .btn-ghost:hover{
+  background: #f1f5f9 !important;
+  border-color: #b6c2cf !important;
+}
+
+/* Asegura que el backdrop oscurezca suficiente en ambos temas */
+.modal-backdrop{
+  background: rgba(0,0,0,.45) !important;
+}
+
+/* Botón cancelar con contraste correcto en ambos temas */
+:root.Light .modal-card .cancel-btn,
+:root.Light .card-soft .cancel-btn {
+  background: #ffffff !important;
+  color: #0f172a !important;          /* slate-900 */
+  border: 1px solid #cbd5e1 !important; /* slate-300 */
+}
+
+:root.Light .modal-card .cancel-btn:hover,
+:root.Light .card-soft .cancel-btn:hover {
+  background: #f1f5f9 !important;       /* slate-100 */
+  border-color: #94a3b8 !important;     /* slate-400 */
+}
+
+/* Tema oscuro: estilo “ghost” pero visible */
+:root.Dark .modal-card .cancel-btn,
+:root.Dark .card-soft .cancel-btn {
+  background: transparent !important;
+  color: #e2e8f0 !important;            /* slate-200 */
+  border: 1px solid rgba(226,232,240,.25) !important;
+}
+
+:root.Dark .modal-card .cancel-btn:hover,
+:root.Dark .card-soft .cancel-btn:hover {
+  background: rgba(148,163,184,.12) !important; /* slate-400/12% */
+  border-color: rgba(226,232,240,.35) !important;
+}
+
+/* Por si hay reglas genéricas de .btn que pisan el color */
+.cancel-btn { box-shadow: none !important; }
+
+
+
+/* ===== Grid de planes ===== */
+.plans-grid{
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 12px;
+}
+@media (max-width: 1024px){
+  .plans-grid{ grid-template-columns: 1fr; }
+}
+
+.plan-card{
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  padding: 16px;
+}
+
+.plan-featured{
+  outline: 2px solid rgba(91,91,247,.45);
+  box-shadow: 0 8px 28px rgba(91,91,247,.25);
+  position: relative;
+}
+
+.plan-head{
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.plan-head h3{ margin: 0; }
+
+.price{
+  font-size: 20px;
+  font-weight: 700;
+}
+.price small{
+  font-size: 12px;
+  opacity: .8;
+  margin-left: 4px;
+}
+
+.plan-feat{
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 12px;
+}
+.plan-feat li{
+  display: grid;
+  grid-template-columns: 16px 1fr;
+  gap: 8px;
+  margin: 6px 0;
+}
+.plan-feat li::before{
+  content: "✓";
+  width: 16px; height: 16px;
+  display: grid; place-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.25);
+  font-size: 12px;
+}
+:root.Light .plan-feat li::before{ border-color: #cdd5df; }
+
+.plan-actions{
+  margin-top: auto; /* empuja el botón al fondo de la tarjeta */
+  display: flex; justify-content: center;
+}
+
+
+
+/* Grid responsive de planes */
+.plans-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+/* Tarjeta base */
+.plan-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 360px;
+  transition: box-shadow .2s ease, transform .2s ease, border-color .2s ease;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+/* Cabecera y precio */
+.plan-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
   margin-bottom: 6px;
 }
+.plan-head h3 { margin: 0; }
+.price { font-weight: 700; }
+.price small { font-weight: 400; opacity: .8; }
 
-/* inputs y selects uniformes */
-.input, select.input {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.12);
-  color: #e6f4ef;
-  border-radius: 10px;
+/* Lista de features */
+.plan-feat { margin: 10px 0 0; padding-left: 18px; }
+.plan-feat li { margin: 6px 0; }
+
+/* Acciones */
+.plan-actions { margin-top: 14px; display: flex; gap: 8px; }
+
+
+/* Plan activo: borde + glow morado */
+.plan-card.selected {
+  border-color: #6d28d9;
+  box-shadow:
+    0 0 0 3px rgba(109, 40, 217, .35),
+    0 10px 30px rgba(109, 40, 217, .25);
 }
 
-.input:focus {
-  outline: 0;
-  border-color: rgba(99, 255, 196, 0.6);
-  box-shadow: 0 0 0 3px rgba(99, 255, 196, 0.15);
+/* Botón ghost ya lo tienes; el btn normal será el morado activo */
+
+
+.plan-card { display:flex; flex-direction:column; min-height:540px; padding:28px; }
+.plan-head { margin-bottom:16px; }
+
+.plan-title {
+  margin:0;
+  line-height:1.2;
+  font-size: clamp(24px, 3.2vw, 34px);
+  font-weight: 800;
 }
 
-/* botones */
-.btn {
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.12);
+.plan-price {
+  margin:6px 0 0;
+  font-size: clamp(14px, 1.3vw, 16px);
+  font-weight: 500;   /* más discreto que bold */
+  opacity: .9;
 }
+.plan-price span { opacity:.7; }
 
-.btn.primary {
-  border-color: rgba(99, 255, 196, 0.4);
-}
-
-/* tablas */
-table {
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-table thead th {
-  background: rgba(255,255,255,0.06);
-  font-weight: 600;
-}
-
-.badge.ok { background: rgba(46, 204, 113, .18); }
-.badge.no { background: rgba(231, 76, 60, .18); }
-
-
-/* Forzar tema oscuro en selects y su lista desplegable (Windows/Chrome) */
-:root { color-scheme: dark; }
-
-/* Estilo base del control */
-select,
-select.input,
-.input.plan-select {
-  background-color: #0d1524;
-  color: #e6f4ef;
-  border: 1px solid rgba(255,255,255,0.14);
-}
-
-/* Colores del menú desplegable (las opciones) */
-select.input option,
-.input.plan-select option {
-  background-color: #0b1220;   /* fondo de la lista */
-  color: #e8f7f0;              /* texto legible */
-}
-
-/* Opción resaltada / hover */
-select.input option:checked,
-.input.plan-select option:checked {
-  background-color: #17324a;   /* resaltado */
-  color: #caffea;
-}
-
-select.input option:hover,
-.input.plan-select option:hover {
-  background-color: #1e3b5a;
-  color: #ffffff;
-}
-
-/* Deshabilitadas (si las usas en otras vistas) */
-select.input:disabled,
-select.input option:disabled {
-  color: #8a96a8;
-}
-
-/* Focus lindo y accesible */
-select.input:focus,
-.input.plan-select:focus {
-  outline: 0;
-  box-shadow: 0 0 0 3px rgba(99,255,196,.22);
-  border-color: rgba(99,255,196,.5);
-}
+.plan-feat { display:flex; flex-direction:column; gap:12px; margin:10px 0 0; list-style:none; padding:0; }
+.plan-actions { margin-top:auto; }

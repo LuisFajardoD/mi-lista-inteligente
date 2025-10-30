@@ -1,64 +1,50 @@
-// Definición del tipo de oferta con soporte para afiliados
+import { supabase } from './supabaseClient';
+
 export type Offer = {
-  provider: 'Amazon' | 'Walmart' | 'MercadoLibre'
-  name: string
-  price: number
-  shipping: number
-  available: boolean
-  prevTotal?: number   // para detectar baja de precio
-  affiliateUrl?: string // para enlaces de afiliado
+  provider: string;
+  price: number;
+  shipping: number;
+  available: boolean;
+  affiliateUrl?: string;
+  prevTotal?: number;
+  image?: string;
+};
+
+export const offerTotal = (o: Offer) => (o.price ?? 0) + (o.shipping ?? 0);
+
+export function bestOffer(arr: Offer[]) {
+  return arr.length ? [...arr].sort((a, b) => offerTotal(a) - offerTotal(b))[0] : undefined;
 }
 
-// Catálogo simulado de productos
-const catalog: Record<string, Omit<Offer, 'affiliateUrl'>[]> = {
-  'cuaderno profesional': [
-    { provider: 'Amazon',       name: 'Cuaderno profesional', price: 45,  shipping: 79,  available: true,  prevTotal: 140 },
-    { provider: 'Walmart',      name: 'Cuaderno profesional', price: 42,  shipping: 89,  available: true,  prevTotal: 145 },
-    { provider: 'MercadoLibre', name: 'Cuaderno profesional', price: 39,  shipping: 99,  available: true,  prevTotal: 150 },
-  ],
-  'lapiz hb': [
-    { provider: 'Amazon',       name: 'Lápiz HB',             price: 6,   shipping: 69,  available: true,  prevTotal: 78 },
-    { provider: 'Walmart',      name: 'Lápiz HB',             price: 5.5, shipping: 89,  available: true,  prevTotal: 85 },
-    { provider: 'MercadoLibre', name: 'Lápiz HB',             price: 5.9, shipping: 99,  available: true,  prevTotal: 92 },
-  ],
-  'tijeras escolares': [
-    { provider: 'Amazon',       name: 'Tijeras escolares',    price: 55,  shipping: 69,  available: false, prevTotal: 128 },
-    { provider: 'Walmart',      name: 'Tijeras escolares',    price: 59,  shipping: 89,  available: true,  prevTotal: 160 },
-    { provider: 'MercadoLibre', name: 'Tijeras escolares',    price: 49,  shipping: 99,  available: true,  prevTotal: 152 },
-  ],
+export function collapseByProvider(offers: Offer[]): Offer[] {
+  const byProv = new Map<string, Offer>();
+  for (const o of offers) {
+    const key = (o.provider ?? '').toLowerCase().trim() || 'desconocido';
+    const prev = byProv.get(key);
+    if (!prev || offerTotal(o) < offerTotal(prev)) byProv.set(key, o);
+  }
+  return [...byProv.values()].sort((a, b) => offerTotal(a) - offerTotal(b));
 }
 
-// Normalizador de términos de búsqueda
-function norm(s: string) {
-  return (s || '')
-    .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim()
-}
-
-// Enlaces base de afiliados por proveedor
-const affiliateBases: Record<string, string> = {
-  'Amazon': 'https://amazon.com/dp/XYZ?tag=',
-  'Walmart': 'https://walmart.com/ip/XYZ?affid=',
-  'MercadoLibre': 'https://mercadolibre.com.mx/item/XYZ?sid=',
-}
-
-// Busca ofertas de un producto en el catálogo simulado
-export async function searchOffers(term: string, userId?: string): Promise<Offer[]> {
-  const key = norm(term)
-  await new Promise((r) => setTimeout(r, 250))
-  const offers = catalog[key] ?? []
-
-  // Agregar URL de afiliado única si hay userId
-  return offers.map(o => ({
-    ...o,
-    affiliateUrl: userId ? `${affiliateBases[o.provider]}${userId}` : undefined
-  }))
-}
-
-// Devuelve la mejor oferta por precio total (precio + envío)
-export function bestOffer(offers: Offer[]) {
-  return offers.slice().sort((a, b) => (a.price + a.shipping) - (b.price + b.shipping))[0]
+export async function searchOffers(query: string, userId?: string | null): Promise<Offer[]> {
+  const q = (query ?? '').toString().trim();
+  if (!q) return [];
+  try {
+    const { data, error } = await supabase.functions.invoke('price-search', {
+      body: { q, limit: 8, user_id: userId ?? null },
+      headers: { 'content-type': 'application/json' },
+    });
+    if (error) return [];
+    const items = Array.isArray(data?.offers) ? data.offers : [];
+    return items.map((it: any): Offer => ({
+      provider: String(it.provider ?? ''),
+      price: Number(it.price ?? 0),
+      shipping: Number(it.shipping ?? 0),
+      available: Boolean(it.available),
+      affiliateUrl: String(it.url ?? ''),
+      image: typeof it.image === 'string' ? it.image : undefined,
+    }));
+  } catch {
+    return [];
+  }
 }

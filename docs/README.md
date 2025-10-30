@@ -35,6 +35,7 @@ Este directorio contiene los entregables del proyecto académico **Mi Lista Inte
 - [Ejecución — Sprint 4](./actividad-3.2/Sprint4_Ejecucion.pdf)  
 - [Retrospectiva — Sprint 4](./actividad-3.2/Retrospectiva_Sprint4.pdf)  
 - [Informe de resultados y conclusiones](./actividad-3.2/Informe_de_resultados_y_conclusiones.pdf)  
+  > **Nota:** El *Sprint Planning — Sprint 4* no fue solicitado explícitamente en la actividad 3.1, pero se incluye como respaldo para mantener la trazabilidad del proyecto.  
 
 ---
 
@@ -43,6 +44,7 @@ Este directorio contiene los entregables del proyecto académico **Mi Lista Inte
 - [Ejecución — Sprint 5](./actividad-3.3/Sprint5_Ejecucion.pdf)  
 - [Retrospectiva — Sprint 5](./actividad-3.3/Retrospectiva_Sprint5.pdf)  
 - [Informe de resultados y conclusiones](./actividad-3.3/Informe_de_resultados_y_conclusiones.pdf)  
+  > **Nota:** El *Sprint Planning — Sprint 5* no fue solicitado explícitamente en la actividad 3.1, pero se incluye como respaldo para mantener la trazabilidad del proyecto.  
 
 ---
 
@@ -51,3 +53,13 @@ Este directorio contiene los entregables del proyecto académico **Mi Lista Inte
 - [Ejecución — Sprint 6](./actividad-3.4/Sprint6_Ejecucion.pdf)  
 - [Retrospectiva — Sprint 6](./actividad-3.4/Retrospectiva_Sprint6.pdf)  
 - [Informe de resultados y conclusiones](./actividad-3.4/Informe_de_resultados_y_conclusiones.pdf)
+  > **Nota:** El *Sprint Planning — Sprint 6* no fue solicitado explícitamente en la actividad 3.1, pero se incluye como respaldo para mantener la trazabilidad del proyecto.  
+
+---
+
+## 📂 Actividad 3.5 — Sprint 7
+- [Sprint Planning — Sprint 7](./actividad-3.5/Sprint_Planning_Sprint7.pdf)  
+- [Ejecución — Sprint 7](./actividad-3.5/Sprint7_Ejecucion.pdf)  
+- [Retrospectiva — Sprint 7](./actividad-3.5/Retrospectiva_Sprint7.pdf)  
+- [Informe de resultados y conclusiones](./actividad-3.5/Informe_de_resultados_y_conclusiones.pdf)
+  > **Nota:** El *Sprint Planning — Sprint 7* no fue solicitado explícitamente en la actividad 3.1, pero se incluye como respaldo para mantener la trazabilidad del proyecto.  

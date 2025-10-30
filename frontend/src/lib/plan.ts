@@ -1,24 +1,44 @@
-import { useEffect, useState } from 'react'
+// frontend/src/lib/plan.ts
+import { useEffect, useState } from 'react';
+import { supabase } from './supabaseClient';
 
-export type Plan = 'free' | 'premium' | 'b2b'
-const KEY = 'demo.plan'
+export type PlanName = 'free'|'premium'|'b2b';
 
-function readStoredPlan(): Plan {
-  const v = (localStorage.getItem(KEY) || 'free') as Plan
-  return v === 'premium' || v === 'b2b' ? v : 'free'
+export async function getPlan() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { plan: 'free' as PlanName, error: null };
+  const { data, error } = await supabase
+    .from('user_plans')
+    .select('plan')
+    .eq('user_id', user.id)
+    .maybeSingle();
+  if (error) return { plan: 'free' as PlanName, error };
+  return { plan: (data?.plan ?? 'free') as PlanName, error: null };
+}
+
+export async function setPlan(next: PlanName) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('No auth');
+  const { error } = await supabase
+    .from('user_plans')
+    .upsert({ user_id: user.id, plan: next, updated_at: new Date().toISOString() });
+  if (error) throw error;
 }
 
 export function usePlan() {
-  const [plan, setPlanState] = useState<Plan>('free')
+  const [plan, set] = useState<PlanName>('free');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setPlanState(readStoredPlan())
-  }, [])
+    (async () => {
+      const { plan } = await getPlan();
+      set(plan);
+      setLoading(false);
+    })();
+  }, []);
 
-  function setPlan(next: Plan) {
-    localStorage.setItem(KEY, next)
-    setPlanState(next)
-  }
-
-  return { plan, setPlan }
+  return { plan, loading, refresh: async () => {
+    const { plan } = await getPlan();
+    set(plan);
+  }, setPlan: (next: PlanName) => set(next) };
 }

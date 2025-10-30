@@ -101,6 +101,22 @@ Flujo principal: **Subir lista → Unificar → Comparar → Comprar/Descargar**
 
 ---
 
+### 🟢 Sprint 7 (Finalizado)
+**Periodo:** 1–14 diciembre 2025  
+**Alcance logrado (12 pts):**  
+- **Corrección de errores y hardening**: triggers `updated_at`, RLS mínimas y normalización de `working_lists` (UNIQUE por usuario).  
+- **Rediseño de UI/UX**:  
+  - Panel lateral, tarjetas y tablas con mejor legibilidad (clamp, anchos, alineación numérica).  
+  - **Modales de confirmación** accesibles (claro/oscuro, foco visible, Esc).  
+  - **Pagos**: tarjetas Premium/Free/B2B con **acento morado** para plan activo y botones coherentes.  
+  - **Listas guardadas**: acciones alineadas (Abrir/Renombrar/Compartir/Borrar).  
+- **Búsquedas reales**: SerpAPI operando como capa de búsqueda estable para la demo.  
+- **Documentación y empaquetado**: README/entregables, smoke E2E de cierre (Login → Upload → Unificar → Comparar → Guardar/Compartir).
+
+**Resultado:** incremento final **pulido y presentable**, con flujo completo de punta a punta y documentación lista para entrega.
+
+---
+
 ## Estructura del repositorio
 mi-lista-inteligente/  
 ├─ frontend/  # Aplicación web (Vite + React + Supabase)  
@@ -110,13 +126,9 @@ mi-lista-inteligente/
 │  ├─ actividad-3.1/   # Entregables Sprint 3  
 │  ├─ actividad-3.2/   # Entregables Sprint 4  
 │  ├─ actividad-3.3/   # Entregables Sprint 5  
-│  └─ actividad-3.4/   # Entregables Sprint 6  
+│  ├─ actividad-3.4/   # Entregables Sprint 6  
+│  └─ actividad-3.5/   # Entregables Sprint 7  
 └─ README.md
-
----
-
-## Próximos pasos
-- **Sprint 7 (Buffer):** hardening, **CSS/UX/UI**, observabilidad básica, correcciones menores y empaquetado final (**release/tag**, documentación y evidencias).
 
 ---
 

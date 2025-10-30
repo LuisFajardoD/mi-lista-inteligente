@@ -1,0 +1,15 @@
+﻿.git
+__inspeccion
+docs
+docs\actividad-2.2
+docs\actividad-2.3
+docs\actividad-3.1
+docs\actividad-3.2
+docs\actividad-3.3
+docs\actividad-3.4
+frontend
+frontend\node_modules
+frontend\src
+frontend\src\components
+frontend\src\lib
+frontend\src\pages

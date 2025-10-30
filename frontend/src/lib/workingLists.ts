@@ -1,105 +1,114 @@
+// frontend/src/lib/workingLists.ts
 import { supabase } from './supabaseClient'
 
 export type WorkingList = {
   id: string
   user_id: string
   name: string | null
-  raw: any[]
-  unified: any[]
-  updated_at: string
+  raw: any[] | null
+  unified: any[] | null
+  created_at?: string | null
+  updated_at?: string | null
 }
 
-const nowIso = () => new Date().toISOString()
+/* ======== BORRADOR (working_lists) ======== */
 
-/**
- * Guarda/actualiza el borrador del usuario.
- * 1) Intenta UPSERT por UNIQUE(user_id)  → requiere la constraint que ya agregamos en SQL.
- * 2) Si el backend no tiene esa constraint y devuelve 400 on_conflict, hace:
- *    - busca el último borrador del usuario
- *    - si existe → UPDATE por id
- *    - si no    → INSERT
- */
+// Upsert por usuario (requiere UNIQUE(user_id) en DB)
 export async function upsertWorkingList(
   userId: string,
-  data: { name?: string; raw: any[]; unified: any[] }
+  payload: { name?: string; raw?: any[]; unified?: any[] }
 ) {
-  // ---- intento A: UPSERT por user_id (lo ideal)
-  const upsertRes = await supabase
-    .from('working_lists')
-    .upsert(
-      [
-        {
-          user_id: userId,
-          name: data.name ?? null,
-          raw: data.raw,
-          unified: data.unified,
-          updated_at: nowIso(),
-        },
-      ],
-      { onConflict: 'user_id' }
-    )
-
-  if (!upsertRes.error) return
-
-  const errMsg = (upsertRes.error?.message || '').toLowerCase()
-  const isOnConflictIssue =
-    errMsg.includes('on_conflict') || errMsg.includes('on conflict') || upsertRes.status === 400
-
-  if (!isOnConflictIssue) {
-    // Otro tipo de error: propágalo
-    throw upsertRes.error
-  }
-
-  // ---- intento B: buscar el último borrador y actualizar por id; si no hay, insertar
-  const { data: existing, error: qErr } = await supabase
-    .from('working_lists')
-    .select<'id'>('id')
-    .eq('user_id', userId)
-    .order('updated_at', { ascending: false })
-    .limit(1)
-
-  if (qErr) throw qErr
-
-  if (existing && existing.length > 0) {
-    const { error: updErr } = await supabase
-      .from('working_lists')
-      .update({
-        name: data.name ?? null,
-        raw: data.raw,
-        unified: data.unified,
-        updated_at: nowIso(),
-      })
-      .eq('id', existing[0].id)
-
-    if (updErr) throw updErr
-  } else {
-    const { error: insErr } = await supabase.from('working_lists').insert([
-      {
-        user_id: userId,
-        name: data.name ?? null,
-        raw: data.raw,
-        unified: data.unified,
-        updated_at: nowIso(),
-      },
-    ])
-    if (insErr) throw insErr
-  }
-}
-
-export async function fetchLatestWorkingList(userId: string) {
   const { data, error } = await supabase
     .from('working_lists')
-    .select('id, user_id, name, raw, unified, updated_at')
-    .eq('user_id', userId)
-    .order('updated_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
+    .upsert(
+      {
+        user_id: userId,
+        name: payload.name ?? 'Borrador',
+        raw: payload.raw ?? [],
+        unified: payload.unified ?? [],
+        // aunque tengas trigger, enviamos updated_at para compatibilidad
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'user_id' }
+    )
+    .select()
+    .single()
 
   if (error) throw error
-  return (data as WorkingList | null) ?? null
+  return data as WorkingList
+}
+
+// Como user_id es UNIQUE, podemos usar single() directo
+export async function fetchLatestWorkingList(userId: string) {
+  try {
+    const { data, error } = await supabase
+      .from('working_lists')
+      .select('id,user_id,name,raw,unified,updated_at,created_at')
+      .eq('user_id', userId)
+      .single()
+
+    // PGRST116 = no row found
+    if (error && (error as any).code !== 'PGRST116') {
+      console.warn('fetchLatestWorkingList error:', error)
+      return null
+    }
+    return (data ?? null) as WorkingList | null
+  } catch (e) {
+    console.warn('fetchLatestWorkingList exception:', e)
+    return null
+  }
 }
 
 export async function clearWorkingList(userId: string) {
   const { error } = await supabase.from('working_lists').delete().eq('user_id', userId)
+  if (error) throw error
+}
+
+/* ======== LISTAS GUARDADAS (saved_lists) ======== */
+
+export async function listSaved(userId: string) {
+  const { data, error } = await supabase
+    .from('saved_lists')
+    .select('id,name,data,created_at,updated_at')
+    .eq('user_id', userId)
+    .order('updated_at', { ascending: false })
+
+  if (error) throw error
+
+  // Normaliza por si updated_at es null (primeras filas antes del trigger)
+  return (data ?? []).map((r: any) => ({
+    id: r.id,
+    user_id: userId,
+    name: r.name ?? null,
+    raw: null, // no lo pedimos en el listado
+    unified: (r.data?.unified ?? []) as any[],
+    created_at: r.created_at ?? null,
+    updated_at: r.updated_at ?? r.created_at ?? null,
+  })) as WorkingList[]
+}
+
+export async function openListIntoDraft(userId: string, savedListId: string) {
+  const { data, error } = await supabase
+    .from('saved_lists')
+    .select('name,data')
+    .eq('id', savedListId)
+    .single();
+  if (error) throw error;
+
+  return upsertWorkingList(userId, {
+    name: (data as any)?.name ?? 'Borrador desde lista',
+    raw: (data as any)?.data?.raw ?? [],
+    unified: (data as any)?.data?.unified ?? [],
+  });
+}
+
+
+export async function renameList(id: string, name: string) {
+  const { error } = await supabase.from('saved_lists').update({ name }).eq('id', id)
+  if (error) throw error
+}
+
+export async function deleteList(id: string) {
+  const { error } = await supabase.from('saved_lists').delete().eq('id', id)
   if (error) throw error
 }

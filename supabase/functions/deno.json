@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "lib": ["deno.window", "dom"],
+    "strict": true
+  },
+  "imports": {
+    "serve": "https://deno.land/std@0.224.0/http/server.ts",
+    "@supabase/supabase-js": "jsr:@supabase/supabase-js@^2",
+    "@supabase/functions-js/edge-runtime.d.ts": "jsr:@supabase/functions-js@^2/edge-runtime.d.ts"
+  }
+}
