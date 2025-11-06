@@ -1,140 +1,140 @@
 # Mi Lista Inteligente — Proyecto VII
 
 ## Descripción del proyecto
-**Mi Lista Inteligente** es una aplicación web desarrollada como parte del curso **Proyecto VII** en UDGVirtual.  
-El objetivo principal es apoyar a familias y pequeños negocios en la optimización de sus compras, permitiendo cargar listas de artículos, unificar productos repetidos y comparar precios entre diferentes proveedores.
+**Mi Lista Inteligente** es una aplicación web desarrollada en el marco del curso **Proyecto VII** (UDGVirtual).  
+Permite **cargar** listas de artículos (manual/CSV/XLSX), **unificar** duplicados, **comparar** precios entre proveedores y obtener el **costo total** de compra. Incluye **exportables** (PDF del comparativo y **CSV Carrito**), **historial de precios**, **alertas**, **colaboración por roles** y **planes/pagos en sandbox**.
 
-La propuesta combina un enfoque académico con una visión práctica de aplicación real en el mercado, explorando posibles modelos de monetización mediante afiliaciones y servicios premium.
+---
+
+## Estado actual y entregables
+- Incremento final **aceptado** (S3–S7).
+- Fuente de precios actual: **SerpAPI** (operativa). Las **APIs nativas por proveedor** quedan para la siguiente etapa.
+- Evidencias:
+  - **Actividad 3.6 – Sprint Review:** `/docs/actividad-3.6/Actividad 3.6. Sprint Review.pdf`
+  - **Producto Integrador (PI):** `/docs/pi/PI-Producto-Integrador.pdf`
 
 ---
 
 ## Objetivos generales
-- Desarrollar un prototipo funcional con base en metodologías ágiles (Scrum).
-- Implementar un sistema de autenticación seguro para usuarios.
-- Permitir la carga y unificación de listas de artículos en formato digital.
-- Incorporar un comparador de precios con proveedores externos.
-- Implementar alertas de precios e historial de productos.
-- Documentar el avance del proyecto por sprints, de acuerdo con la planeación establecida.
+- Desarrollar un prototipo funcional bajo **Scrum** con entregas incrementales.
+- Implementar **autenticación** y **persistencia** seguras.
+- Permitir **carga** y **unificación** de listas en formatos digitales.
+- Incorporar un **comparador** multi-proveedor con **costo total**.
+- Habilitar **exportables** (PDF comparativo, **CSV Carrito**), **historial** y **alertas**.
+- Documentar el avance **por sprints** conforme a la planeación.
 
 ---
 
 ## Tecnologías utilizadas
-- **Frontend:** React + Vite + TypeScript  
-- **Backend como servicio:** Supabase (autenticación y base de datos)  
-- **Lenguaje:** JavaScript/TypeScript  
-- **Control de versiones:** Git y GitHub  
+- **Frontend:** React + Vite (TypeScript)
+- **Servicios backend (BaaS):** Supabase (auth, BD, RLS)
+- **Lenguajes:** TypeScript / JavaScript
+- **Control de versiones:** Git + GitHub
 - **Metodología:** Scrum
 
 ---
 
 ## Planeación y resultados por sprint
 
-### 🟢 Sprint 1 (Finalizado)
-**Periodo:** 8–21 septiembre 2025  
-**Alcance logrado:**  
-- **Autenticación de usuarios** (registro, inicio de sesión, recuperación) con Supabase.  
-- **Carga de listas** (CSV/XLSX).  
-- **Unificación de productos** repetidos (consolidación de cantidades).  
-- Validaciones básicas y retroalimentación al usuario.  
-**Resultado:** sistema inicial funcional para administrar listas de productos de manera unificada.
+**semanas del curso**.
+
+### 🟢 Sprint 1 (Finalizado) — Semana 1–2
+**Alcance logrado**
+- **Autenticación** (registro, inicio de sesión, recuperación) con Supabase.
+- **Carga de listas** (CSV/XLSX) y captura manual.
+- **Unificación** de productos repetidos (por nombre/SKU) con suma de cantidades.
+- Validaciones de formato y retroalimentación en UI.  
+**Resultado:** base funcional para administración de listas.
 
 ---
 
-### 🟢 Sprint 2 (Finalizado)
-**Periodo:** 22 septiembre – 5 octubre 2025  
-**Alcance logrado:**  
-- **Comparador de precios** con datos simulados para Amazon, Walmart y Mercado Libre.  
-- Presentación de **precio + envío + disponibilidad** por proveedor.  
-- Identificación de **mejor oferta por producto**.  
-- Cálculo de **totales** considerando cantidad.  
-**Resultado:** comparación visible entre proveedores que optimiza la decisión de compra.
+### 🟢 Sprint 2 (Finalizado) — Semana 3–4
+**Alcance logrado**
+- **Comparador de precios** (consulta a proveedores vía agregador).
+- Visualización de **precio + envío + disponibilidad** por proveedor.
+- Selección de **mejor oferta** por producto.  
+**Resultado:** comparación visible; **H6 (total)** se reprograma para S3.
 
 ---
 
-### 🟢 Sprint 3 (Finalizado)
-**Periodo:** 6–19 octubre 2025  
-**Alcance logrado:**  
-- **Cálculo de costo total** con envíos (pendiente de S2).  
-- **Alertas automáticas**: PRICE_DROP (≥5%) y BACK_IN_STOCK.  
-- Tabla **`price_history`** y persistencia de históricos.  
-- Vista **/history** para consultar cambios.  
-**Resultado:** comparador completo con alertas e histórico de precios consultable.
+### 🟢 Sprint 3 (Finalizado) — Semana 5–6
+**Alcance logrado**
+- **Costo total** (mejor precio por renglón + total general).
+- **Alertas** (PRICE_DROP, BACK_IN_STOCK).
+- **Historial de precios** (`price_history`) y vista de consulta.  
+**Resultado:** comparador + total con seguimiento (historial/alertas).
 
 ---
 
-### 🟢 Sprint 4 (Finalizado)
-**Periodo:** 20 octubre – 2 noviembre 2025  
-**Alcance logrado:**  
-- **Enlaces de afiliado** por proveedor con **tracking por usuario**.  
-- Botón **“Comprar”** por producto.  
-- **Exportación a PDF** del comparativo (jsPDF + Autotable): título, fecha, tabla completa y **total del carrito**.  
-- Pruebas de integración con alertas e historial.  
-**Resultado:** monetización inicial por afiliados y evidencia descargable del comparativo.  
-Flujo principal: **Subir lista → Unificar → Comparar → Comprar/Descargar**.
+### 🟢 Sprint 4 (Finalizado) — Semana 7–8
+**Alcance logrado**
+- **PDF del comparativo** (jsPDF + autotable).
+- **Afiliados** (enlaces de compra).  
+**Resultado:** evidencia descargable y monetización inicial.
 
 ---
 
-### 🟢 Sprint 5 (Finalizado)
-**Periodo:** 3–16 noviembre 2025  
-**Alcance logrado:**  
-- **Suscripciones (H11.1–H11.3, H11.5–H11.7)**: planes **Gratis/Premium/B2B** con restricciones por plan visibles en la UI.  
-- **Carga masiva (H12.1–H12.3)**: importación **Excel/CSV** con validación básica y consolidación en la lista.  
-- **Replanificación controlada** a mitad de sprint: **H11.4 (pagos)** y **H12.4–H12.10 (colaboración/roles/permisos/compartir + pruebas/demo)** se movieron a **Sprint 6**.  
-**Resultado:** incremento **funcional y aceptado por el PO**.
+### 🟢 Sprint 5 (Finalizado) — Semana 9–10
+**Alcance logrado**
+- **Planes/Suscripciones** (Gratis/Premium/B2B) con restricciones visibles.
+- Avances en **colaboración** (diseño y modelos).
+- **Replanificación:** pagos y consolidación de colaboración se mueven a S6.  
+**Resultado:** incremento funcional aceptado.
 
 ---
 
-### 🟢 Sprint 6 (Finalizado)
-**Periodo:** 17–30 noviembre 2025  
-**Alcance logrado (35 pts):**  
-- **Pagos (H11.4)**: activación de plan **Gratis/Premium/B2B** desde la UI (sandbox), persistencia en **`user_plans`**, y reflejo inmediato de límites por plan.  
-- **Colaboración (H12.4–H12.8, H12.9–H12.10)**:  
-  - **Equipos y roles** (owner/editor/viewer) con **RLS** y políticas por tabla.  
-  - **Permisos** de edición/solo lectura y **compartir listas** (interno por correo).  
-  - **Enlace público de solo lectura con expiración/revocación (H12.11)**.  
-  - **Pruebas integrales + demo y aceptación del PO**.  
-- **Carrito Rápido (H9.2)**: exportación **CSV** con la **mejor oferta por producto** (precio+envío, cantidad, totales y enlace de compra).  
-- **Estabilidad técnica**: tabla **`working_lists`** con **UNIQUE(user_id)** para **upsert** confiable; RLS activo en tablas nuevas.
-
-**Resultado:** producto **estable y trazable**, listo para pulido visual y hardening en S7.  
-**Lo reprogramado a S7 (buffer):** ajustes de **CSS/UX/UI**, observabilidad y micro-mejoras.
+### 🟢 Sprint 6 (Finalizado) — Semana 11–12
+**Alcance logrado (35 pts)**
+- **Pagos (sandbox)**: activación de plan y persistencia (`user_plans`).
+- **Colaboración**: **Equipos/Roles** (owner/editor/viewer), permisos y **enlace público** de solo lectura con **expiración/revocación** (**H12.11**).
+- **CSV Carrito (H9.2)**: exportación con mejor oferta por producto (precio+envío, cantidad, totales y enlace).
+- **Hardening**: mejoras de UX, estados y control de errores.  
+**Resultado:** producto estable y listo para cierre.
 
 ---
 
-### 🟢 Sprint 7 (Finalizado)
-**Periodo:** 1–14 diciembre 2025  
-**Alcance logrado (12 pts):**  
-- **Corrección de errores y hardening**: triggers `updated_at`, RLS mínimas y normalización de `working_lists` (UNIQUE por usuario).  
-- **Rediseño de UI/UX**:  
-  - Panel lateral, tarjetas y tablas con mejor legibilidad (clamp, anchos, alineación numérica).  
-  - **Modales de confirmación** accesibles (claro/oscuro, foco visible, Esc).  
-  - **Pagos**: tarjetas Premium/Free/B2B con **acento morado** para plan activo y botones coherentes.  
-  - **Listas guardadas**: acciones alineadas (Abrir/Renombrar/Compartir/Borrar).  
-- **Búsquedas reales**: SerpAPI operando como capa de búsqueda estable para la demo.  
-- **Documentación y empaquetado**: README/entregables, smoke E2E de cierre (Login → Upload → Unificar → Comparar → Guardar/Compartir).
+### 🟢 Sprint 7 (Finalizado) — Semana 13–14
+**Alcance logrado (12 pts)**
+- **Hardening/UI** y documentación final de sprints.
+- Ajustes de accesibilidad (foco visible, contraste) y modales coherentes.
+- Revisión de RLS y normalización de tablas de trabajo.
+- Confirmación de operación con **SerpAPI** para la demo.  
+**Resultado:** incremento final pulido y presentable.
 
-**Resultado:** incremento final **pulido y presentable**, con flujo completo de punta a punta y documentación lista para entrega.
+---
+
+## Capacidades clave (resumen)
+- **Auth/Registro** y persistencia de sesión.
+- **Carga** (manual/CSV/XLSX) y **unificación** de duplicados.
+- **Comparador** multi-proveedor + **costo total**.
+- **PDF** del comparativo y **CSV Carrito**.
+- **Listas guardadas**, **historial** por producto y **alertas**.
+- **Equipos/Roles** y **enlace público** (solo lectura, con expiración).
+- **Planes/Suscripciones** y **pagos en sandbox**.
 
 ---
 
 ## Estructura del repositorio
-mi-lista-inteligente/  
-├─ frontend/  # Aplicación web (Vite + React + Supabase)  
-├─ docs/  
-│  ├─ actividad-2.2/   # Entregables Sprint 1  
-│  ├─ actividad-2.3/   # Entregables Sprint 2  
-│  ├─ actividad-3.1/   # Entregables Sprint 3  
-│  ├─ actividad-3.2/   # Entregables Sprint 4  
-│  ├─ actividad-3.3/   # Entregables Sprint 5  
-│  ├─ actividad-3.4/   # Entregables Sprint 6  
-│  └─ actividad-3.5/   # Entregables Sprint 7  
+mi-lista-inteligente/
+├─ frontend/ # Aplicación web (Vite + React + Supabase)
+├─ docs/
+│ ├─ actividad-2.2/ # Entregables Sprint 1
+│ ├─ actividad-2.3/ # Entregables Sprint 2
+│ ├─ actividad-3.1/ # Entregables Sprint 3
+│ ├─ actividad-3.2/ # Entregables Sprint 4
+│ ├─ actividad-3.3/ # Entregables Sprint 5
+│ ├─ actividad-3.4/ # Entregables Sprint 6
+│ ├─ actividad-3.5/ # Entregables Sprint 7
+│ └─ actividad-3.6/ # Sprint Review (U3)
 └─ README.md
+
+
 
 ---
 
 ## Créditos
-Proyecto desarrollado en el marco de la materia Proyecto VII (UDGVirtual) por el equipo:  
-- **Luis Enrique – Product Owner**  
-- **Alicia – Scrum Master / QA**  
-- **Luis Yasmani – Backend / DevOps**  
-- **Eduardo Alejandro – Frontend**
+Proyecto desarrollado en la materia **Proyecto VII (UDGVirtual)** por el equipo:
+- **Luis Enrique — Product Owner**
+- **Alicia — Scrum Master / QA**
+- **Luis Yasmani — Desarrollador Backend / DevOps**
+- **Eduardo Alejandro — Desarrollador Frontend**

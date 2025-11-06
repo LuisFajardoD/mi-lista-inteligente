@@ -63,3 +63,17 @@ Este directorio contiene los entregables del proyecto académico **Mi Lista Inte
 - [Retrospectiva — Sprint 7](./actividad-3.5/Retrospectiva_Sprint7.pdf)  
 - [Informe de resultados y conclusiones](./actividad-3.5/Informe_de_resultados_y_conclusiones.pdf)
   > **Nota:** El *Sprint Planning — Sprint 7* no fue solicitado explícitamente en la actividad 3.1, pero se incluye como respaldo para mantener la trazabilidad del proyecto.  
+
+---
+
+## 📂 Actividad 3.6 — Sprint Review (U3)
+- [**Actividad 3.6. Sprint Review**](./actividad-3.6/Actividad%203.6.%20Sprint%20Review.pdf)  
+  > Resumen ejecutivo, cuadro **plan vs. resultado**, incremento del producto (evidencias), **cumplimiento/DoD**, métricas, decisiones, riesgos.
+
+- [**Sprints Finales (S3–S7)**](./actividad-3.6/Sprints%20Finales.pdf)  
+  > Consolidado gráfico/tablas de puntos por sprint, reprogramaciones y lectura rápida.
+
+- [**Product Backlog Final**](./actividad-3.6/Product%20Backlog%20Final.pdf)  
+  > Backlog **completo** al cierre de S7 (estado, prioridad, esfuerzo y sprint de cierre).
+
+---
